@@ -1,11 +1,11 @@
+import React from 'react';
+
 const App = () => {
   return (
-    <div className="p-10 text-center">
-      <h1 className="text-3xl font-bold text-green-600">
-        Hello from Tailwind!
-      </h1>
-    </div>
-  );
-};
+    <main className='overflow-hidden'>
+      
+    </main>
+  )
+}
 
-export default App;
+export default App
