@@ -1,0 +1,32 @@
+@tailwind utilities;
+
+@layer utilities {
+  /* Login Section */
+  .login-section {
+    @apply bg-white rounded-3xl shadow-lg p-6 max-w-md mx-auto my-8;
+  }
+
+  .login-header {
+    @apply flex items-center justify-center mb-6;
+  }
+
+  .login-logo {
+    @apply text-gray-500 mr-2;
+  }
+
+  .login-title {
+    @apply text-3xl font-bold text-s1;
+  }
+
+  .login-oauth-group {
+    @apply flex flex-col gap-4;
+  }
+
+  .login-oauth-button {
+    @apply flex items-center justify-start py-3 px-4 border border-gray-300 rounded-lg;
+  }
+
+  .login-oauth-icon {
+    @apply w-6 h-6 mr-3;
+  }
+}
