@@ -14,8 +14,45 @@ const Onboarding = () => {
   const [direction, setDirection] = useState(0);
 
   useEffect(() => {
-    setIsLoading(false);
-  }, []);
+    const checkPreferences = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate('/login');
+        return;
+      }
+
+      // Check if user exists in our database
+      const { error: userError } = await supabase
+        .from('users')
+        .upsert({
+          id: user.id,
+          email: user.email,
+          name: user.user_metadata?.full_name || user.email,
+          auth_provider: user.app_metadata?.provider || 'email',
+          created_at: new Date().toISOString()
+        });
+
+      if (userError) {
+        console.error('Error creating user:', userError);
+        return;
+      }
+
+      const { data: preferences, error } = await supabase
+        .from('preferences')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (preferences) {
+        navigate('/calendar');
+        return;
+      }
+
+      setIsLoading(false);
+    };
+
+    checkPreferences();
+  }, [navigate]);
 
   const questions = [
     {
@@ -118,7 +155,7 @@ const Onboarding = () => {
                   {c.id === 'welcome' && (
                     <>
                       <h2 className="text-3xl font-bold text-[#292f36]">Welcome to Chalkboard</h2>
-                      <p className="text-gray-600">Let’s personalize your study experience.</p>
+                      <p className="text-gray-600">Let's personalize your study experience.</p>
                       <button onClick={handleNext} className="bg-lime-400 hover:bg-lime-500 px-6 py-3 rounded-xl text-black font-semibold">Continue</button>
                     </>
                   )}
