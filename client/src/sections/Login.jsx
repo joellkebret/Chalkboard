@@ -1,86 +1,76 @@
 import React, { useEffect } from 'react';
-import '../Login.css';
 import { useNavigate } from 'react-router-dom';
-
 import { UserCircleIcon } from '@heroicons/react/24/outline';
-
 import { supabase } from '../supabase/supabaseClient';
-
+import { motion } from 'framer-motion';
 import GoogleIcon from '../assets/google.png';
 import GitHubIcon from '../assets/github.png';
 
 const Login = () => {
   const navigate = useNavigate();
 
-  const handleGoogleLogin = async () => {
+  const handleOAuthLogin = async (provider) => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: { redirectTo: 'http://localhost:5173' },
+        provider,
+        options: { redirectTo: 'http://localhost:5173/login' },
       });
       if (error) throw error;
     } catch (error) {
-      console.error('Google login failed:', error.message);
-      alert(`Google login failed: ${error.message}`);
-    }
-  };
-
-  const handleGitHubLogin = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'github',
-        options: { redirectTo: 'http://localhost:5173' },
-      });
-      if (error) throw error;
-    } catch (error) {
-      console.error('GitHub login failed:', error.message);
-      alert(`GitHub login failed: ${error.message}`);
+      console.error(`${provider} login failed:`, error.message);
+      alert(`${provider} login failed: ${error.message}`);
     }
   };
 
   useEffect(() => {
-    const checkUserStatus = async () => {
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser();
+    const checkLogin = async () => {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error) return;
 
-      if (error || !user) return;
-
-      // Check if the user has preferences
-      const { data: preferences, error: prefError } = await supabase
-        .from('preferences')
-        .select('user_id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (prefError || !preferences) {
-        navigate('/onboarding'); // First-time user
-      } else {
-        navigate('/home'); // Existing user
+      if (user) {
+        const redirect = localStorage.getItem('redirectAfterLogin');
+        if (redirect) {
+          localStorage.removeItem('redirectAfterLogin');
+          navigate('/filter');
+        }
       }
     };
 
-    checkUserStatus();
-  }, [navigate]);
+    checkLogin();
+  }, []);
 
   return (
-    <section className="container login-section">
-      <div className="login-header">
-        <UserCircleIcon className="login-logo w-8 h-8" />
-        <h1 className="login-title">Chalkboard</h1>
-      </div>
-      <h2 className="h2 text-s1 mb-8">Log in to your account</h2>
-      <div className="login-oauth-group">
-        <button className="login-oauth-button" onClick={handleGoogleLogin}>
-          <img src={GoogleIcon} alt="Google" className="login-oauth-icon w-6 h-6" />
-          Google
-        </button>
-        <button className="login-oauth-button" onClick={handleGitHubLogin}>
-          <img src={GitHubIcon} alt="GitHub" className="login-oauth-icon w-6 h-6" />
-          GitHub
-        </button>
-      </div>
+    <section className="h-[calc(100vh-64px)] flex items-center justify-center bg-[#292f36] px-6 relative overflow-hidden">
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7 }}
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-sm py-16 px-8 z-10 text-center space-y-8"
+      >
+        <div className="flex flex-col items-center space-y-2">
+          <UserCircleIcon className="w-12 h-12 text-[#292f36]" />
+          <h1 className="text-3xl font-extrabold text-[#292f36] font-fredericka">Chalkboard</h1>
+        </div>
+        <p className="text-gray-600 text-sm">Log in to your account</p>
+
+        <div className="flex flex-col gap-4">
+          <button
+            onClick={() => handleOAuthLogin('google')}
+            className="flex items-center justify-center gap-3 bg-white border border-gray-300 px-4 py-2 rounded-xl hover:bg-gray-50 transition text-gray-700 font-medium"
+          >
+            <img src={GoogleIcon} alt="Google" className="w-5 h-5" />
+            <span>Continue with Google</span>
+          </button>
+
+          <button
+            onClick={() => handleOAuthLogin('github')}
+            className="flex items-center justify-center gap-3 bg-black px-4 py-2 rounded-xl hover:bg-gray-800 transition text-white font-medium"
+          >
+            <img src={GitHubIcon} alt="GitHub" className="w-5 h-5 bg-white rounded" />
+            <span>Continue with GitHub</span>
+          </button>
+        </div>
+      </motion.div>
     </section>
   );
 };

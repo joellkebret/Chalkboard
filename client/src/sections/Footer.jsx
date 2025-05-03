@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaTwitter, FaGithub, FaLinkedin } from 'react-icons/fa';
+import { FaGithub } from 'react-icons/fa';
 
 const Footer = () => {
   return (
@@ -22,16 +22,15 @@ const Footer = () => {
           </ul>
         </div>
 
-        {/* Social Icons */}
-        <div className="flex justify-center md:justify-end space-x-6 text-2xl">
-          <a href="https://twitter.com" className="hover:text-lime-400" target="_blank" rel="noopener noreferrer">
-            <FaTwitter />
-          </a>
-          <a href="https://github.com" className="hover:text-lime-400" target="_blank" rel="noopener noreferrer">
+        {/* GitHub Only */}
+        <div className="flex justify-center md:justify-end text-2xl">
+          <a
+            href="https://github.com/joellkebret/Chalkboard"
+            className="hover:text-lime-400"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <FaGithub />
-          </a>
-          <a href="https://linkedin.com" className="hover:text-lime-400" target="_blank" rel="noopener noreferrer">
-            <FaLinkedin />
           </a>
         </div>
       </div>

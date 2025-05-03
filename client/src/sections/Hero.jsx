@@ -1,9 +1,34 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { supabase } from '../supabase/supabaseClient';
 
 const Hero = () => {
   const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data?.user) setUser(data.user);
+    });
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+    });
+
+    return () => {
+      listener?.subscription?.unsubscribe();
+    };
+  }, []);
+
+  const handleStartUploading = () => {
+    if (user) {
+      navigate('/filter');
+    } else {
+      localStorage.setItem('redirectAfterLogin', 'true');
+      navigate('/login');
+    }
+  };
 
   return (
     <section className="relative bg-[#292f36] pt-40 pb-24 px-6 overflow-visible">
@@ -13,7 +38,6 @@ const Hero = () => {
       <div className="absolute top-[20%] left-[45%] w-[150px] h-[150px] bg-lime-400 opacity-10 rounded-full blur-2xl z-0"></div>
 
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
-        
         {/* Text Section */}
         <motion.div
           initial={{ opacity: 0, x: -30 }}
@@ -21,7 +45,7 @@ const Hero = () => {
           transition={{ duration: 0.8 }}
           className="z-20"
         >
-          <h1 className="text-6xl xl:text-7xl font-extrabold text-white leading-tight mb-8 font-fredericka text-center lg:text-left">
+          <h1 className="text-6xl xl:text-7xl font-extrabold text-white leading-[1.4] mb-8 font-fredericka text-center lg:text-left">
             Organize your <br />
             <span className="text-lime-400">study schedule</span>
           </h1>
@@ -30,7 +54,7 @@ const Hero = () => {
           </p>
           <div className="text-center lg:text-left">
             <button
-              onClick={() => navigate('/Filter')}
+              onClick={handleStartUploading}
               className="px-8 py-4 bg-lime-400 text-black text-lg rounded-xl hover:bg-lime-500 transition font-semibold shadow-lg"
             >
               Start Uploading

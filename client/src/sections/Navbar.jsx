@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabase/supabaseClient';
 import { FaBars, FaTimes } from 'react-icons/fa';
 
@@ -8,6 +8,8 @@ export default function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const isHome = location.pathname === '/';
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -33,23 +35,28 @@ export default function Navbar() {
     setDropdownOpen(false);
   };
 
+  const scrollToSection = (id) => {
+    navigate('/', { state: { scrollTo: id } });
+    setMobileMenuOpen(false);
+  };
+
   return (
-    <nav className="sticky top-0 z-50 w-full bg-[#292f36] shadow-md px-6 py-4">
+    <nav className={`${isHome ? 'sticky top-0' : 'relative'} z-50 w-full bg-[#292f36] shadow-md px-6 py-4`}>
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         {/* Logo */}
         <div
           className="text-2xl font-bold text-white cursor-pointer"
-          onClick={() => navigate('/')}
+          onClick={() => scrollToSection('home')}
         >
           Chalkboard
         </div>
 
         {/* Desktop Nav Links */}
         <ul className="hidden md:flex space-x-6 text-white font-medium">
-          <li><a href="#home" className="hover:text-lime-400 transition">Home</a></li>
-          <li><a href="#about" className="hover:text-lime-400 transition">About</a></li>
-          <li><a href="#features" className="hover:text-lime-400 transition">Features</a></li>
-          <li><a href="#faq" className="hover:text-lime-400 transition">FAQ</a></li>
+          <li><button onClick={() => scrollToSection('home')} className="hover:text-lime-400 transition">Home</button></li>
+          <li><button onClick={() => scrollToSection('about')} className="hover:text-lime-400 transition">About</button></li>
+          <li><button onClick={() => scrollToSection('features')} className="hover:text-lime-400 transition">Features</button></li>
+          <li><button onClick={() => scrollToSection('faq')} className="hover:text-lime-400 transition">FAQ</button></li>
         </ul>
 
         {/* Right side user actions */}
@@ -110,10 +117,10 @@ export default function Navbar() {
       {/* Mobile Nav Links */}
       {mobileMenuOpen && (
         <div className="md:hidden mt-4 space-y-4 text-white text-lg">
-          <a href="#home" className="block hover:text-lime-400 transition">Home</a>
-          <a href="#about" className="block hover:text-lime-400 transition">About</a>
-          <a href="#features" className="block hover:text-lime-400 transition">Features</a>
-          <a href="#faq" className="block hover:text-lime-400 transition">FAQ</a>
+          <button onClick={() => scrollToSection('home')} className="block hover:text-lime-400 transition">Home</button>
+          <button onClick={() => scrollToSection('about')} className="block hover:text-lime-400 transition">About</button>
+          <button onClick={() => scrollToSection('features')} className="block hover:text-lime-400 transition">Features</button>
+          <button onClick={() => scrollToSection('faq')} className="block hover:text-lime-400 transition">FAQ</button>
 
           {!user ? (
             <button
