@@ -12,7 +12,7 @@ const Filter = () => {
   };
 
   return (
-    <div className="p-10 max-w-2xl mx-auto bg-white rounded-lg shadow">
+    <div className="mt-32 p-10 max-w-2xl mx-auto bg-white rounded-lg shadow">
       <h2 className="text-2xl font-bold mb-4">Upload Course Outline</h2>
 
       <FileUpload

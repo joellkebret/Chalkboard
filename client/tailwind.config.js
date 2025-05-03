@@ -4,6 +4,11 @@ export default {
   theme: {
     extend: {
       colors: {
+        richblack: '#02111B',
+        onyx: '#3F4045',
+        raisin: '#30292F',
+        payne: '#5D737E',
+        offwhite: '#FCFCFC',
         p1: '#2EF2FF',
         p2: '#3C52D9',
         p3: '#C8EA80',
@@ -29,6 +34,7 @@ export default {
       fontFamily: {
         inter: ['Inter', 'sans-serif'],
         poppins: ['Poppins', 'sans-serif'],
+        fredericka: ['"Fredericka the Great"', 'cursive'],// ✅ Added for h1 chalk-style
       },
       transitionProperty: {
         borderColor: 'border-color',
