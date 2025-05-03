@@ -32,7 +32,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="w-[99%] mx-auto mt-2 rounded-xl flex justify-between items-center px-6 py-4 bg-black shadow-md">
+    <nav className="sticky w-[99%] mx-auto mt-2 rounded-xl flex justify-between items-center px-6 py-4 shadow-md">
       <div className="text-2xl font-bold text-white">🧠 Chalkboard</div>
 
       <div className="relative">
