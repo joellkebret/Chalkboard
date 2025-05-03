@@ -1,9 +1,19 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import fs from 'fs';
 import PDFParser from 'pdf2json';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
+
+// Ensure API key is properly formatted
+const apiKey = process.env.GEMINI_API_KEY;
+if (!apiKey) {
+  throw new Error('GEMINI_API_KEY environment variable is not set');
+}
 
 // Initialize Gemini with the API key
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const genAI = new GoogleGenerativeAI(apiKey);
 
 const extractTextFromPDF = (pdfPath) => {
   return new Promise((resolve, reject) => {
@@ -28,8 +38,8 @@ export const extractScheduleFromMultiplePDFs = async (filePaths) => {
   try {
     console.log("🔑 Using GEMINI_API_KEY:", process.env.GEMINI_API_KEY?.slice(0, 6) + '...');
 
-    // Load the Gemini 1.5 Flash model for processing PDFs
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    // Load the Gemini model for processing PDFs
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
 
     console.log("📂 Extracting text from PDFs...");
     const pdfContents = await Promise.all(
