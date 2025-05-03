@@ -11,13 +11,24 @@
     "tailwind:init": "tailwindcss init -p"
   },
   "dependencies": {
+<<<<<<< HEAD
     "@heroicons/react": "^2.2.0",
+=======
+    "@fullcalendar/daygrid": "^6.1.17",
+    "@fullcalendar/interaction": "^6.1.17",
+    "@fullcalendar/react": "^6.1.17",
+    "@fullcalendar/timegrid": "^6.1.17",
+>>>>>>> 2c2a5946cbda869f29984e426d6a986f88ff2977
     "@supabase/supabase-js": "^2.49.4",
     "dotenv": "^16.5.0",
     "firebase": "^11.6.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+<<<<<<< HEAD
     "react-icons": "^5.5.0",
+=======
+    "react-router-dom": "^7.5.3",
+>>>>>>> 2c2a5946cbda869f29984e426d6a986f88ff2977
     "uuid": "^11.1.0"
   },
   "devDependencies": {
