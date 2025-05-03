@@ -10,7 +10,8 @@ import Navbar from './sections/Navbar';
 import Filter from './sections/Filter';
 import Footer from './sections/Footer';
 import Onboarding from './pages/Onboarding';
-import Calendar from './pages/Calendar'; // ✅ import calendar page
+import Calendar from './pages/Calendar';
+import Settings from './pages/Settings'; // ✅ import if you have one
 
 const App = () => {
   const location = useLocation();
@@ -35,18 +36,10 @@ const App = () => {
             path="/"
             element={
               <main>
-                <section id="home">
-                  <Hero />
-                </section>
-                <section id="about" className="py-20">
-                  <About />
-                </section>
-                <section id="features" className="py-20">
-                  <Features />
-                </section>
-                <section id="faq" className="py-20">
-                  <Faq />
-                </section>
+                <section id="home"><Hero /></section>
+                <section id="about" className="py-20"><About /></section>
+                <section id="features" className="py-20"><Features /></section>
+                <section id="faq" className="py-20"><Faq /></section>
                 <Footer />
               </main>
             }
@@ -54,7 +47,8 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/filter" element={<Filter />} />
           <Route path="/onboarding" element={<Onboarding />} />
-          <Route path="/calendar" element={<Calendar />} /> {/* ✅ calendar route */}
+          <Route path="/calendar" element={<Calendar />} />
+          <Route path="/settings" element={<Settings />} /> {/* Optional settings page */}
         </Routes>
       </div>
     </div>

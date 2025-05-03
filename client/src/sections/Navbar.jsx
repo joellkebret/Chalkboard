@@ -8,8 +8,6 @@ export default function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
-  const isHome = location.pathname === '/';
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -25,14 +23,13 @@ export default function Navbar() {
     };
   }, []);
 
-  const handleSignIn = () => {
-    navigate('/login');
-  };
+  const handleSignIn = () => navigate('/login');
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
     setDropdownOpen(false);
+    navigate('/', { state: { scrollTo: 'home' } }); // 👈 go to Hero
   };
 
   const scrollToSection = (id) => {
@@ -43,15 +40,10 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 w-full bg-[#1e232a] shadow-md px-6 py-4">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
-        {/* Logo */}
-        <div
-          className="text-2xl font-bold text-white cursor-pointer"
-          onClick={() => scrollToSection('home')}
-        >
+        <div className="text-2xl font-bold text-white cursor-pointer" onClick={() => scrollToSection('home')}>
           Chalkboard
         </div>
 
-        {/* Desktop Nav Links */}
         <ul className="hidden md:flex space-x-6 text-white font-medium">
           <li><button onClick={() => scrollToSection('home')} className="hover:text-lime-400 transition">Home</button></li>
           <li><button onClick={() => scrollToSection('about')} className="hover:text-lime-400 transition">About</button></li>
@@ -59,17 +51,11 @@ export default function Navbar() {
           <li><button onClick={() => scrollToSection('faq')} className="hover:text-lime-400 transition">FAQ</button></li>
         </ul>
 
-        {/* Right side user actions */}
         <div className="flex items-center space-x-4">
-          {/* Mobile Menu Toggle */}
-          <button
-            className="text-white text-2xl md:hidden"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
+          <button className="text-white text-2xl md:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
             {mobileMenuOpen ? <FaTimes /> : <FaBars />}
           </button>
 
-          {/* Auth section */}
           <div className="relative">
             {!user ? (
               <button
@@ -95,7 +81,7 @@ export default function Navbar() {
                 {dropdownOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white border rounded shadow-md z-50">
                     <button
-                      onClick={() => alert('Settings clicked')}
+                      onClick={() => navigate('/settings')}
                       className="block w-full text-left px-4 py-2 hover:bg-gray-100"
                     >
                       Settings
@@ -114,7 +100,6 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Nav Links */}
       {mobileMenuOpen && (
         <div className="md:hidden mt-4 space-y-4 text-white text-lg">
           <button onClick={() => scrollToSection('home')} className="block hover:text-lime-400 transition">Home</button>
@@ -132,7 +117,7 @@ export default function Navbar() {
           ) : (
             <div className="space-y-4">
               <button
-                onClick={() => alert('Settings clicked')}
+                onClick={() => navigate('/settings')}
                 className="w-full text-left px-4 py-2 hover:bg-gray-100 bg-white text-black rounded"
               >
                 Settings
