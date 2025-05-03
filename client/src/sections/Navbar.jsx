@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // ✅ import this
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase/supabaseClient';
+import { FaBars, FaTimes } from 'react-icons/fa';
 
 export default function Navbar() {
   const [user, setUser] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const navigate = useNavigate(); // ✅ setup navigation
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -22,7 +24,7 @@ export default function Navbar() {
   }, []);
 
   const handleSignIn = () => {
-    navigate('/login'); // ✅ redirect to Login component
+    navigate('/login');
   };
 
   const handleSignOut = async () => {
@@ -32,50 +34,112 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="sticky w-[99%] mx-auto mt-2 rounded-xl flex justify-between items-center px-6 py-4 shadow-md">
-      <div className="text-2xl font-bold text-white">🧠 Chalkboard</div>
+    <nav className="sticky top-0 z-50 w-full bg-[#292f36] shadow-md px-6 py-4">
+      <div className="max-w-7xl mx-auto flex justify-between items-center">
+        {/* Logo */}
+        <div
+          className="text-2xl font-bold text-white cursor-pointer"
+          onClick={() => navigate('/')}
+        >
+          Chalkboard
+        </div>
 
-      <div className="relative">
-        {!user ? (
+        {/* Desktop Nav Links */}
+        <ul className="hidden md:flex space-x-6 text-white font-medium">
+          <li><a href="#home" className="hover:text-lime-400 transition">Home</a></li>
+          <li><a href="#about" className="hover:text-lime-400 transition">About</a></li>
+          <li><a href="#features" className="hover:text-lime-400 transition">Features</a></li>
+          <li><a href="#faq" className="hover:text-lime-400 transition">FAQ</a></li>
+        </ul>
+
+        {/* Right side user actions */}
+        <div className="flex items-center space-x-4">
+          {/* Mobile Menu Toggle */}
           <button
-            onClick={handleSignIn}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+            className="text-white text-2xl md:hidden"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
-            Sign In
+            {mobileMenuOpen ? <FaTimes /> : <FaBars />}
           </button>
-        ) : (
-          <div>
-            <button
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="flex items-center space-x-2"
-            >
-              <img
-                src={user.user_metadata?.avatar_url || 'https://i.pravatar.cc/40'}
-                alt="User"
-                className="w-9 h-9 rounded-full border"
-              />
-              <span className="text-white">{user.user_metadata?.name || 'User'}</span>
-            </button>
 
-            {dropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white border rounded shadow-md z-50">
+          {/* Auth section */}
+          <div className="relative hidden md:block">
+            {!user ? (
+              <button
+                onClick={handleSignIn}
+                className="bg-lime-400 text-black px-6 py-3 rounded hover:bg-lime-500 transition font-semibold"
+              >
+                Sign In
+              </button>
+            ) : (
+              <div>
                 <button
-                  onClick={() => alert('Settings clicked')}
-                  className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className="flex items-center space-x-2"
                 >
-                  Settings
+                  <img
+                    src={user.user_metadata?.avatar_url || 'https://i.pravatar.cc/40'}
+                    alt="User"
+                    className="w-9 h-9 rounded-full border"
+                  />
+                  <span className="text-white">{user.user_metadata?.name || 'User'}</span>
                 </button>
-                <button
-                  onClick={handleSignOut}
-                  className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-red-500"
-                >
-                  Sign Out
-                </button>
+
+                {dropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white border rounded shadow-md z-50">
+                    <button
+                      onClick={() => alert('Settings clicked')}
+                      className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                    >
+                      Settings
+                    </button>
+                    <button
+                      onClick={handleSignOut}
+                      className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-red-500"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
-        )}
+        </div>
       </div>
+
+      {/* Mobile Nav Links */}
+      {mobileMenuOpen && (
+        <div className="md:hidden mt-4 space-y-4 text-white text-lg">
+          <a href="#home" className="block hover:text-lime-400 transition">Home</a>
+          <a href="#about" className="block hover:text-lime-400 transition">About</a>
+          <a href="#features" className="block hover:text-lime-400 transition">Features</a>
+          <a href="#faq" className="block hover:text-lime-400 transition">FAQ</a>
+
+          {!user ? (
+            <button
+              onClick={handleSignIn}
+              className="w-full bg-lime-400 text-black px-6 py-3 rounded hover:bg-lime-500 transition font-semibold"
+            >
+              Sign In
+            </button>
+          ) : (
+            <div className="pt-2 border-t border-gray-700">
+              <button
+                onClick={() => alert('Settings clicked')}
+                className="block w-full text-left px-4 py-2 hover:bg-[#1e232b]"
+              >
+                Settings
+              </button>
+              <button
+                onClick={handleSignOut}
+                className="block w-full text-left px-4 py-2 text-red-500 hover:bg-[#1e232b]"
+              >
+                Sign Out
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </nav>
   );
 }
