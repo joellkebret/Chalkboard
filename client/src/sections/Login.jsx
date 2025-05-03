@@ -1,41 +1,62 @@
 import React from 'react';
-import '../Login.css'; // Import the separate CSS file for custom styles
+import '../Login.css';
+import { UserCircleIcon } from '@heroicons/react/24/outline'; // For logo
+import { signInWithPopup } from 'firebase/auth';
+import { auth, googleProvider, githubProvider } from '../firebase'; // Import Firebase auth and providers
+// Import PNG images from src/assets/
+import GoogleIcon from '../assets/google.png';
+import GitHubIcon from '../assets/github.png';
 
 const Login = () => {
-  const handleLoginClick = () => {
-    alert('Login button clicked! Add your authentication logic here.');
+  const handleGoogleLogin = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      console.log('Google login successful:', {
+        displayName: user.displayName,
+        email: user.email,
+        photoURL: user.photoURL,
+      });
+      alert(`Welcome, ${user.displayName}! You are now logged in.`);
+    } catch (error) {
+      console.error('Google login failed:', error.message);
+      alert(`Google login failed: ${error.message}`);
+    }
   };
 
-  const handleSignUpClick = () => {
-    alert('Sign up link clicked! Redirect to sign-up page.');
+  const handleGitHubLogin = async () => {
+    try {
+      const result = await signInWithPopup(auth, githubProvider);
+      const user = result.user;
+      console.log('GitHub login successful:', {
+        displayName: user.displayName,
+        email: user.email,
+        photoURL: user.photoURL,
+      });
+      alert(`Welcome, ${user.displayName}! You are now logged in.`);
+    } catch (error) {
+      console.error('GitHub login failed:', error.message);
+      alert(`GitHub login failed: ${error.message}`);
+    }
   };
 
   return (
     <section className="container login-section">
       <div className="login-header">
-        <span className="login-logo">📋</span>
+        <UserCircleIcon className="login-logo w-8 h-8" />
         <h1 className="login-title">Chalkboard</h1>
       </div>
       <h2 className="h2 text-s1 mb-8">Log in to your account</h2>
-      <div className="login-input-group">
-        <div className="login-input-wrapper">
-          <span className="login-icon">📧</span>
-          <input type="email" placeholder="Email" className="login-input" />
-        </div>
-        <div className="login-input-wrapper">
-          <span className="login-icon">🔒</span>
-          <input type="password" placeholder="Password" className="login-input" />
-        </div>
+      <div className="login-oauth-group">
+        <button className="login-oauth-button" onClick={handleGoogleLogin}>
+          <img src={GoogleIcon} alt="Google" className="login-oauth-icon w-6 h-6" />
+          Google
+        </button>
+        <button className="login-oauth-button" onClick={handleGitHubLogin}>
+          <img src={GitHubIcon} alt="GitHub" className="login-oauth-icon w-6 h-6" />
+          GitHub
+        </button>
       </div>
-      <button className="login-button" onClick={handleLoginClick}>
-        Log in
-      </button>
-      <p className="login-signup-text">
-        Don’t have an account?{' '}
-        <span className="login-signup-link" onClick={handleSignUpClick}>
-          Sign up
-        </span>
-      </p>
     </section>
   );
 };

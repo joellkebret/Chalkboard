@@ -11,10 +11,13 @@
     "tailwind:init": "tailwindcss init -p"
   },
   "dependencies": {
+    "@heroicons/react": "^2.2.0",
     "@supabase/supabase-js": "^2.49.4",
     "dotenv": "^16.5.0",
+    "firebase": "^11.6.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-icons": "^5.5.0",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
