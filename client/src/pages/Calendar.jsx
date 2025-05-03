@@ -1,11 +1,13 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
+import { supabase } from '../supabase/supabaseClient';
 
 const Calendar = () => {
   const calendarRef = useRef(null);
+  const [loading, setLoading] = useState(false);
 
   // Sample events
   const events = [
@@ -13,6 +15,30 @@ const Calendar = () => {
     { title: 'Lunch Break', start: '2025-05-06T12:00:00', end: '2025-05-06T13:00:00' },
     { title: 'Project Deadline', start: '2025-05-10' }, // All-day event
   ];
+
+  // Trigger the scheduling engine for the logged-in user
+  async function runEngine() {
+    setLoading(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      alert('You must be logged in!');
+      setLoading(false);
+      return;
+    }
+    const userId = user.id;
+    try {
+      const res = await fetch(`/api/schedule/${userId}`, { method: 'POST' });
+      const data = await res.json();
+      if (data.scheduled) {
+        alert('Schedule generated!');
+      } else {
+        alert(data.message || 'No schedule generated.');
+      }
+    } catch (err) {
+      alert('Failed to generate schedule.');
+    }
+    setLoading(false);
+  }
 
   // Handle date click
   const handleDateClick = (arg) => {
@@ -33,6 +59,15 @@ const Calendar = () => {
   return (
     <section className="container overflow-hidden">
       <h1 className="h2 text-center mb-8">Event Calendar</h1>
+      <div className="flex justify-center mb-6">
+        <button
+          className="bg-blue-600 text-white px-4 py-2 rounded shadow disabled:opacity-60"
+          onClick={runEngine}
+          disabled={loading}
+        >
+          {loading ? 'Generating...' : 'Generate Study Schedule'}
+        </button>
+      </div>
       <div className="calendar-controls mb-6 flex justify-center gap-4">
         <button
           className="fc-button"
