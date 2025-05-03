@@ -10,6 +10,7 @@ import Navbar from './sections/Navbar';
 import Filter from './sections/Filter';
 import Footer from './sections/Footer';
 import Onboarding from './pages/Onboarding';
+import Calendar from './pages/Calendar'; // ✅ import calendar page
 
 const App = () => {
   const location = useLocation();
@@ -24,8 +25,6 @@ const App = () => {
       }
     }
   }, [location]);
-
-  const isLogin = location.pathname === '/login';
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -55,6 +54,7 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/filter" element={<Filter />} />
           <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/calendar" element={<Calendar />} /> {/* ✅ calendar route */}
         </Routes>
       </div>
     </div>
