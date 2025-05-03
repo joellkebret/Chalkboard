@@ -6,6 +6,7 @@ import Login from './sections/Login';
 const App = () => {
   return (
     <main className="overflow-hidden">
+      <Navbar></Navbar>
       <Hero />
       <Calendar />
       <Login />
