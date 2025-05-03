@@ -3,93 +3,166 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #02111B;
   padding: 2rem;
 }
 
 .card-deck {
   position: relative;
   width: 100%;
-  max-width: 600px;
-  height: 500px;
-  perspective: 1000px;
+  max-width: 420px;
+  height: 520px;
+  perspective: 1200px;
 }
 
 .card {
   position: absolute;
   width: 100%;
+  max-width: 100%;
   height: 100%;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 20px;
-  padding: 2rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  transition: transform 0.5s ease, opacity 0.5s ease;
+  background: #FCFCFC;
+  border-radius: 28px;
+  padding: 2.5rem 2rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.13), 0 2px 8px rgba(32,32,32,0.06);
+  transition: 
+    opacity 0.5s cubic-bezier(.4,2,.6,1),
+    transform 0.5s cubic-bezier(.4,2,.6,1),
+    box-shadow 0.3s cubic-bezier(.4,2,.6,1),
+    z-index 0.3s;
   backface-visibility: hidden;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  transform-origin: center center;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  justify-content: center;
+  align-items: center;
+  border: 2px solid #3F4045;
   pointer-events: auto;
+  opacity: 0;
+  transform: translateY(60px) scale(0.96) rotate(-8deg);
+  visibility: hidden;
+  z-index: 1;
 }
 
 .card.active {
-  transform: translateX(0) rotate(0deg);
   opacity: 1;
+  transform: translateY(0) scale(1) rotate(0deg);
   z-index: 10;
+  visibility: visible;
+  box-shadow: 0 16px 40px rgba(40, 51, 111, 0.13), 0 2px 8px rgba(32,32,32,0.10);
 }
 
-.card:not(.active) {
-  opacity: 0.5;
-  pointer-events: none;
-}
-
-.card.swiped {
-  transform: translateX(-100%) rotate(-10deg);
+.card.hidden {
   opacity: 0;
   pointer-events: none;
+  transform: translateY(-60px) scale(0.96) rotate(8deg);
+  visibility: hidden;
+  z-index: 0;
+}
+
+/* Deck effect for cards behind the active one */
+.card:not(.active):not(.hidden) {
+  opacity: 0.5;
+  transform: translateY(30px) scale(0.98) rotate(-4deg);
+  z-index: 2;
 }
 
 .card-question {
-  font-size: 1.8rem;
-  font-weight: 600;
-  color: #2d3748;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #30292F;
   margin-bottom: 2rem;
   text-align: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  letter-spacing: 0.01em;
 }
 
 .card-options {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  width: 100%;
+  max-width: 100%;
+  align-items: stretch;
+  justify-items: center;
 }
 
 .card-option {
-  padding: 1.2rem;
-  border: 2px solid #e2e8f0;
-  border-radius: 12px;
-  background: white;
-  color: #4a5568;
-  font-weight: 500;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 1.2rem 1.5rem;
+  border: 2px solid #5D737E;
+  border-radius: 16px;
+  background: #F4F6FA;
+  color: #30292F;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 1.1rem;
+  transition: all 0.3s cubic-bezier(.4,2,.6,1);
+  font-size: 1.15rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 2px 8px rgba(32,32,32,0.04);
+  outline: none;
 }
 
 .card-option:hover {
-  background: #f7fafc;
-  border-color: #cbd5e0;
-  transform: translateY(-2px);
+  background: #5D737E;
+  border-color: #764ba2;
+  color: #FCFCFC;
+  transform: translateY(-2px) scale(1.03);
 }
 
 .card-option.selected {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-color: transparent;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  background: #3F4045;
+  color: #FCFCFC;
+  border-color: #764ba2;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.13);
+}
+
+.option-icon-wrap {
+  display: flex;
+  align-items: center;
+  font-size: 1.5rem;
+  margin-right: 0.5rem;
+}
+
+.option-icon {
+  color: #764ba2;
+  filter: drop-shadow(0 1px 2px #02111B44);
+}
+
+.welcome-card {
+  background: #FCFCFC;
+  color: #30292F;
+  border: 2px solid #667eea;
+  box-shadow: 0 16px 40px rgba(40, 51, 111, 0.13), 0 2px 8px rgba(32,32,32,0.10);
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.welcome-desc {
+  font-size: 1.2rem;
+  color: #3F4045;
+  margin-bottom: 2.5rem;
+  margin-top: 0.5rem;
+  font-weight: 400;
+}
+
+.continue-btn {
+  background: #764ba2;
+  color: #FCFCFC;
+  border: none;
+  border-radius: 12px;
+  padding: 1rem 2.5rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+  box-shadow: 0 2px 8px rgba(32,32,32,0.12);
+}
+
+.continue-btn:hover {
+  background: #5D737E;
 }
 
 .animating {
@@ -107,14 +180,14 @@
 }
 
 .course-rating {
-  background: white;
+  background: #F4F6FA;
   padding: 1.5rem;
   border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
 }
 
 .course-rating h3 {
-  color: #2d3748;
+  color: #30292F;
   margin-bottom: 1rem;
   font-size: 1.2rem;
 }
@@ -127,7 +200,7 @@
 }
 
 .rating-section span {
-  color: #4a5568;
+  color: #30292F;
   font-weight: 500;
   min-width: 100px;
 }
@@ -141,7 +214,7 @@
   background: none;
   border: none;
   font-size: 1.5rem;
-  color: #cbd5e0;
+  color: #C8EA80;
   cursor: pointer;
   transition: all 0.3s ease;
   padding: 0.2rem;
@@ -152,26 +225,26 @@
 }
 
 .star.active {
-  color: #f6ad55;
+  color: #F6AD55;
 }
 
 .save-button {
   margin-top: 2rem;
   padding: 1rem 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: #764ba2;
+  color: #FCFCFC;
   border: none;
   border-radius: 12px;
   font-size: 1.2rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.13);
 }
 
 .save-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.18);
 }
 
 .save-button:disabled {
@@ -186,15 +259,15 @@
 }
 
 .course-ratings::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #F4F6FA;
   border-radius: 4px;
 }
 
 .course-ratings::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #764ba2;
   border-radius: 4px;
 }
 
 .course-ratings::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #5a6fd4 0%, #6a3f9a 100%);
+  background: #5D737E;
 } 

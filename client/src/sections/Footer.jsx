@@ -1,7 +1,14 @@
 import React from 'react';
 import { FaGithub } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
 const Footer = () => {
+  const navigate = useNavigate();
+
+  const scrollToSection = (id) => {
+    navigate('/', { state: { scrollTo: id } });
+  };
+
   return (
     <footer className="bg-[#1e232a] text-gray-300 py-12 px-6">
       {/* Grid Section */}
@@ -16,9 +23,9 @@ const Footer = () => {
         <div>
           <h3 className="text-xl font-semibold mb-2">Quick Links</h3>
           <ul className="space-y-1 text-lg">
-            <li><a href="#about" className="hover:text-lime-400 transition">How It Works</a></li>
-            <li><a href="#features" className="hover:text-lime-400 transition">Features</a></li>
-            <li><a href="#faq" className="hover:text-lime-400 transition">FAQ</a></li>
+            <li><button onClick={() => scrollToSection('about')} className="hover:text-lime-400 transition">How It Works</button></li>
+            <li><button onClick={() => scrollToSection('features')} className="hover:text-lime-400 transition">Features</button></li>
+            <li><button onClick={() => scrollToSection('faq')} className="hover:text-lime-400 transition">FAQ</button></li>
           </ul>
         </div>
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase/supabaseClient';
 import '../styles/Onboarding.css';
+import { FaSun, FaMoon, FaSortAmountDown, FaSortAmountUp, FaClock, FaListOl } from 'react-icons/fa';
 
 const Onboarding = () => {
   const navigate = useNavigate();
@@ -10,20 +11,27 @@ const Onboarding = () => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [courses, setCourses] = useState([]);
   const [courseRatings, setCourseRatings] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Fetch courses from the database
     const fetchCourses = async () => {
-      const { data, error } = await supabase
-        .from('courses')
-        .select('*');
-      
-      if (error) {
-        console.error('Error fetching courses:', error);
-        return;
+      try {
+        const { data, error } = await supabase
+          .from('courses')
+          .select('*');
+        
+        if (error) {
+          console.error('Error fetching courses:', error);
+          return;
+        }
+        
+        setCourses(data || []);
+      } catch (error) {
+        console.error('Error in fetchCourses:', error);
+      } finally {
+        setIsLoading(false);
       }
-      
-      setCourses(data);
     };
 
     fetchCourses();
@@ -33,40 +41,76 @@ const Onboarding = () => {
     {
       id: 'is_early_bird',
       question: 'Are you an early bird or a night owl?',
-      options: ['Early Bird', 'Night Owl'],
+      options: [
+        { label: 'Early Bird', icon: <FaSun className="option-icon" /> },
+        { label: 'Night Owl', icon: <FaMoon className="option-icon" /> }
+      ],
       type: 'boolean'
     },
     {
       id: 'preferred_session_length',
       question: 'How long do you prefer to study in one session?',
-      options: ['30 minutes', '45 minutes', '60 minutes', '90 minutes', '120 minutes'],
+      options: [
+        { label: '30 minutes', icon: <FaClock className="option-icon" /> },
+        { label: '45 minutes', icon: <FaClock className="option-icon" /> },
+        { label: '60 minutes', icon: <FaClock className="option-icon" /> },
+        { label: '90 minutes', icon: <FaClock className="option-icon" /> },
+        { label: '120 minutes', icon: <FaClock className="option-icon" /> }
+      ],
       type: 'number'
     },
     {
       id: 'preferred_break_length',
       question: 'How long should breaks between sessions be?',
-      options: ['5 minutes', '10 minutes', '15 minutes', '20 minutes', '30 minutes'],
+      options: [
+        { label: '5 minutes', icon: <FaClock className="option-icon" /> },
+        { label: '10 minutes', icon: <FaClock className="option-icon" /> },
+        { label: '15 minutes', icon: <FaClock className="option-icon" /> },
+        { label: '20 minutes', icon: <FaClock className="option-icon" /> },
+        { label: '30 minutes', icon: <FaClock className="option-icon" /> }
+      ],
       type: 'number'
     },
     {
       id: 'max_classes_per_day',
       question: 'What is the max number of courses you want to study in one day?',
-      options: ['1', '2', '3', '4', '5'],
+      options: [
+        { label: '1', icon: <FaListOl className="option-icon" /> },
+        { label: '2', icon: <FaListOl className="option-icon" /> },
+        { label: '3', icon: <FaListOl className="option-icon" /> },
+        { label: '4', icon: <FaListOl className="option-icon" /> },
+        { label: '5', icon: <FaListOl className="option-icon" /> }
+      ],
       type: 'number'
     },
     {
       id: 'fatigue_threshold',
       question: 'After how many hours of class do you feel tired?',
-      options: ['2 hours', '3 hours', '4 hours', '5 hours', '6+ hours'],
+      options: [
+        { label: '2 hours', icon: <FaClock className="option-icon" /> },
+        { label: '3 hours', icon: <FaClock className="option-icon" /> },
+        { label: '4 hours', icon: <FaClock className="option-icon" /> },
+        { label: '5 hours', icon: <FaClock className="option-icon" /> },
+        { label: '6+ hours', icon: <FaClock className="option-icon" /> }
+      ],
       type: 'number'
     },
     {
       id: 'difficulty_order_preference',
       question: 'How should your tasks be ordered?',
-      options: ['Easy to Hard', 'Hard to Easy'],
+      options: [
+        { label: 'Easy to Hard', icon: <FaSortAmountUp className="option-icon" /> },
+        { label: 'Hard to Easy', icon: <FaSortAmountDown className="option-icon" /> }
+      ],
       type: 'select'
     }
   ];
+
+  const totalCards = questions.length + 1;
+
+  const handleContinue = () => {
+    setCurrentCard(1);
+  };
 
   const handleAnswer = (questionId, answer) => {
     if (isAnimating) return;
@@ -75,16 +119,15 @@ const Onboarding = () => {
     setAnswers(prev => ({ ...prev, [questionId]: answer }));
     
     setTimeout(() => {
-      if (currentCard < questions.length - 1) {
+      if (currentCard < questions.length) {
         setCurrentCard(prev => prev + 1);
       } else if (courses.length > 0) {
-        // Move to course rating section
         setCurrentCard(prev => prev + 1);
       } else {
         savePreferences();
       }
       setIsAnimating(false);
-    }, 500);
+    }, 400);
   };
 
   const handleCourseRating = (courseId, difficulty, importance) => {
@@ -108,7 +151,7 @@ const Onboarding = () => {
           preferred_break_length: parseInt(answers.preferred_break_length),
           max_classes_per_day: parseInt(answers.max_classes_per_day),
           fatigue_threshold: parseInt(answers.fatigue_threshold),
-          difficulty_order_preference: answers.difficulty_order_preference.toLowerCase().replace(' ', '_')
+          difficulty_order_preference: answers.difficulty_order_preference?.toLowerCase().replace(' ', '_')
         });
 
       if (prefError) throw prefError;
@@ -149,40 +192,57 @@ const Onboarding = () => {
     );
   };
 
+  if (isLoading) {
+    return (
+      <div className="onboarding-container">
+        <div className="card-deck">
+          <div className="card active">
+            <h2 className="card-question">Loading...</h2>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="onboarding-container">
       <div className="card-deck">
+        {/* Welcome Card */}
+        {currentCard === 0 && (
+          <div className="card active welcome-card" style={{ zIndex: totalCards }}>
+            <h2 className="card-question" style={{ fontSize: '2.2rem', marginBottom: '1.5rem' }}>Welcome to Chalkboard!</h2>
+            <p className="welcome-desc">Let's personalize your study experience. We'll ask a few quick questions to get started.</p>
+            <button className="continue-btn" onClick={handleContinue}>Continue</button>
+          </div>
+        )}
+        {/* Question Cards */}
         {questions.map((q, index) => (
           <div
             key={q.id}
-            className={`card ${index === currentCard ? 'active' : ''} ${
-              index < currentCard ? 'swiped' : ''
-            } ${isAnimating ? 'animating' : ''}`}
+            className={`card ${index + 1 === currentCard ? 'active' : index + 1 < currentCard ? 'hidden' : ''}`}
             style={{
-              transform: `translateX(${(index - currentCard) * 20}px) rotate(${
-                (index - currentCard) * 5
-              }deg)`,
-              zIndex: questions.length - index,
+              zIndex: totalCards - (index + 1),
+              display: index + 1 > currentCard ? 'none' : 'flex',
             }}
           >
             <h2 className="card-question">{q.question}</h2>
             <div className="card-options">
               {q.options.map((option) => (
                 <button
-                  key={option}
-                  className={`card-option ${answers[q.id] === option ? 'selected' : ''}`}
-                  onClick={() => handleAnswer(q.id, option)}
+                  key={option.label}
+                  className={`card-option ${answers[q.id] === option.label ? 'selected' : ''}`}
+                  onClick={() => handleAnswer(q.id, option.label)}
                 >
-                  {option}
+                  {option.icon && <span className="option-icon-wrap">{option.icon}</span>}
+                  {option.label}
                 </button>
               ))}
             </div>
           </div>
         ))}
-
         {/* Course Rating Section */}
-        {currentCard === questions.length && courses.length > 0 && (
-          <div className="card active">
+        {currentCard === totalCards && courses.length > 0 && (
+          <div className="card active" style={{ zIndex: 1 }}>
             <h2 className="card-question">Rate your courses</h2>
             <div className="course-ratings">
               {courses.map((course) => (

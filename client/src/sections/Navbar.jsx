@@ -41,7 +41,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className={`${isHome ? 'sticky top-0' : 'relative'} z-50 w-full bg-[#292f36] shadow-md px-6 py-4`}>
+    <nav className="sticky top-0 z-50 w-full bg-[#1e232a] shadow-md px-6 py-4">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         {/* Logo */}
         <div
@@ -70,7 +70,7 @@ export default function Navbar() {
           </button>
 
           {/* Auth section */}
-          <div className="relative hidden md:block">
+          <div className="relative">
             {!user ? (
               <button
                 onClick={handleSignIn}
@@ -130,16 +130,16 @@ export default function Navbar() {
               Sign In
             </button>
           ) : (
-            <div className="pt-2 border-t border-gray-700">
+            <div className="space-y-4">
               <button
                 onClick={() => alert('Settings clicked')}
-                className="block w-full text-left px-4 py-2 hover:bg-[#1e232b]"
+                className="w-full text-left px-4 py-2 hover:bg-gray-100 bg-white text-black rounded"
               >
                 Settings
               </button>
               <button
                 onClick={handleSignOut}
-                className="block w-full text-left px-4 py-2 text-red-500 hover:bg-[#1e232b]"
+                className="w-full text-left px-4 py-2 hover:bg-gray-100 bg-white text-red-500 rounded"
               >
                 Sign Out
               </button>

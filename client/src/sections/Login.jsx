@@ -13,7 +13,9 @@ const Login = () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
-        options: { redirectTo: 'http://localhost:5173/login' },
+        options: {
+          redirectTo: window.location.origin + '/onboarding'
+        },
       });
       if (error) throw error;
     } catch (error) {
@@ -32,6 +34,8 @@ const Login = () => {
         if (redirect) {
           localStorage.removeItem('redirectAfterLogin');
           navigate('/filter');
+        } else {
+          navigate('/onboarding');
         }
       }
     };

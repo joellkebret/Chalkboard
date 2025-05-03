@@ -9,6 +9,7 @@ import Login from './sections/Login';
 import Navbar from './sections/Navbar';
 import Filter from './sections/Filter';
 import Footer from './sections/Footer';
+import Onboarding from './pages/Onboarding';
 
 const App = () => {
   const location = useLocation();
@@ -27,32 +28,35 @@ const App = () => {
   const isLogin = location.pathname === '/login';
 
   return (
-    <div className={`${isLogin ? 'h-screen overflow-hidden' : 'overflow-auto'}`}>
+    <div className="min-h-screen flex flex-col">
       <Navbar />
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <main className="overflow-hidden">
-              <section id="home">
-                <Hero />
-              </section>
-              <section id="about" className="py-20">
-                <About />
-              </section>
-              <section id="features" className="py-20">
-                <Features />
-              </section>
-              <section id="faq" className="py-20">
-                <Faq />
-              </section>
-              <Footer />
-            </main>
-          }
-        />
-        <Route path="/login" element={<Login />} />
-        <Route path="/filter" element={<Filter />} />
-      </Routes>
+      <div className="flex-1">
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <main>
+                <section id="home">
+                  <Hero />
+                </section>
+                <section id="about" className="py-20">
+                  <About />
+                </section>
+                <section id="features" className="py-20">
+                  <Features />
+                </section>
+                <section id="faq" className="py-20">
+                  <Faq />
+                </section>
+                <Footer />
+              </main>
+            }
+          />
+          <Route path="/login" element={<Login />} />
+          <Route path="/filter" element={<Filter />} />
+          <Route path="/onboarding" element={<Onboarding />} />
+        </Routes>
+      </div>
     </div>
   );
 };
