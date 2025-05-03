@@ -1,4 +1,5 @@
 import { extractScheduleFromMultiplePDFs } from './services/geminiServiceJSON.js';
+import { extractScheduleFromMultiplePDFs as extractScheduleFromMultiplePDFsText } from './services/geminiService.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
@@ -27,29 +28,21 @@ const __dirname = path.dirname(__filename);
 
 const testPDFs = async () => {
   try {
-    // Verify PDF files exist
     const pdfPaths = [
-      path.join(__dirname, 'services', 'oldcalc.pdf'),
-      path.join(__dirname, 'services', 'test.pdf')
+      path.join(process.cwd(), 'uploads', 'a6d0b07194b23d9a602b3e1e42a74525'),
+      path.join(process.cwd(), 'uploads', '70ccbd80ef2e2c74a6d2244a3472ccdb')
     ];
 
-    for (const pdfPath of pdfPaths) {
-      if (!fs.existsSync(pdfPath)) {
-        throw new Error(`PDF file not found: ${pdfPath}`);
-      }
-    }
+    console.log('Testing JSON version...');
+    const jsonResult = await extractScheduleFromMultiplePDFs(pdfPaths);
+    console.log('JSON Result:', JSON.stringify(jsonResult, null, 2));
 
-    console.log('Processing PDFs:', pdfPaths);
-    const result = await extractScheduleFromMultiplePDFs(pdfPaths);
-    
-    console.log('\nProcessed Course Information:');
-    console.log(JSON.stringify(result, null, 2));
+    console.log('\nTesting Text version...');
+    const textResult = await extractScheduleFromMultiplePDFsText(pdfPaths);
+    console.log('Text Result:', textResult);
+
   } catch (error) {
-    console.error('Error testing PDF processing:');
-    console.error('Error type:', error.constructor.name);
-    console.error('Error message:', error.message);
-    console.error('Stack trace:', error.stack);
-    process.exit(1);
+    console.error('Error during testing:', error);
   }
 };
 
