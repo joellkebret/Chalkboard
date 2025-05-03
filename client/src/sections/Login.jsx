@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import '../Login.css';
+import { useNavigate } from 'react-router-dom';
 
 import { UserCircleIcon } from '@heroicons/react/24/outline';
 
@@ -9,6 +10,8 @@ import GoogleIcon from '../assets/google.png';
 import GitHubIcon from '../assets/github.png';
 
 const Login = () => {
+  const navigate = useNavigate();
+
   const handleGoogleLogin = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -36,22 +39,30 @@ const Login = () => {
   };
 
   useEffect(() => {
-    const getUser = async () => {
+    const checkUserStatus = async () => {
       const {
         data: { user },
         error,
       } = await supabase.auth.getUser();
-      if (error) {
-        console.error('Error fetching user:', error.message);
-        return;
-      }
-      if (user) {
-        const name = user.user_metadata.full_name || user.email;
-        alert(`Welcome, ${name}! You are now logged in.`);
+
+      if (error || !user) return;
+
+      // Check if the user has preferences
+      const { data: preferences, error: prefError } = await supabase
+        .from('preferences')
+        .select('user_id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (prefError || !preferences) {
+        navigate('/onboarding'); // First-time user
+      } else {
+        navigate('/home'); // Existing user
       }
     };
-    getUser();
-  }, []);
+
+    checkUserStatus();
+  }, [navigate]);
 
   return (
     <section className="container login-section">
