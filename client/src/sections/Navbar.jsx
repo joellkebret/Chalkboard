@@ -1,35 +1,35 @@
-import { useEffect, useState } from 'react'
-import { supabase } from '../supabase/supabaseClient' // adjust path if needed
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // ✅ import this
+import { supabase } from '../supabase/supabaseClient';
 
 export default function Navbar() {
-  const [user, setUser] = useState(null)
-  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [user, setUser] = useState(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const navigate = useNavigate(); // ✅ setup navigation
 
   useEffect(() => {
-    // Load user if signed in
     supabase.auth.getUser().then(({ data }) => {
-      if (data?.user) setUser(data.user)
-    })
+      if (data?.user) setUser(data.user);
+    });
 
-    // Listen for auth changes
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user || null)
-    })
+      setUser(session?.user || null);
+    });
 
     return () => {
-      listener?.subscription?.unsubscribe()
-    }
-  }, [])
+      listener?.subscription?.unsubscribe();
+    };
+  }, []);
 
-  const handleSignIn = async () => {
-    await supabase.auth.signInWithOAuth({ provider: 'google' })
-  }
+  const handleSignIn = () => {
+    navigate('/login'); // ✅ redirect to Login component
+  };
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    setUser(null)
-    setDropdownOpen(false)
-  }
+    await supabase.auth.signOut();
+    setUser(null);
+    setDropdownOpen(false);
+  };
 
   return (
     <nav className="w-[99%] mx-auto mt-2 rounded-xl flex justify-between items-center px-6 py-4 bg-black shadow-md">
@@ -77,5 +77,5 @@ export default function Navbar() {
         )}
       </div>
     </nav>
-  )
+  );
 }
