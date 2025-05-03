@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FileUpload } from 'primereact/fileupload';
 import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 
-const Filter = ({ onFinish }) => {
+const Filter = () => {
   const [manualMode, setManualMode] = useState(false);
   const [manualCourses, setManualCourses] = useState([]);
   const [showCourseForm, setShowCourseForm] = useState(false);
@@ -14,11 +15,13 @@ const Filter = ({ onFinish }) => {
     officeHour: '',
     topic: ''
   });
+  const [uploaded, setUploaded] = useState(false);
+  const navigate = useNavigate();
 
   const handleUpload = (e) => {
     const file = e.files[0];
     console.log('Uploaded file:', file);
-    if (onFinish) onFinish();
+    setUploaded(true);
   };
 
   const handleManualCourseAdd = () => {
@@ -26,6 +29,11 @@ const Filter = ({ onFinish }) => {
     setManualCourses(prev => [...prev, newCourse]);
     setNewCourse({ name: '', lectureTime: '', officeHour: '', topic: '' });
     setShowCourseForm(false);
+    setUploaded(true);
+  };
+
+  const handleContinue = () => {
+    navigate('/calendar');
   };
 
   return (
@@ -83,34 +91,46 @@ const Filter = ({ onFinish }) => {
 
           {showCourseForm && (
             <div className="bg-white p-4 rounded shadow text-left space-y-3">
-              <input
-                type="text"
-                placeholder="Course name"
-                className="w-full border px-3 py-2 rounded"
-                value={newCourse.name}
-                onChange={e => setNewCourse({ ...newCourse, name: e.target.value })}
-              />
-              <input
-                type="text"
-                placeholder="Lecture time"
-                className="w-full border px-3 py-2 rounded"
-                value={newCourse.lectureTime}
-                onChange={e => setNewCourse({ ...newCourse, lectureTime: e.target.value })}
-              />
-              <input
-                type="text"
-                placeholder="Office hour (optional)"
-                className="w-full border px-3 py-2 rounded"
-                value={newCourse.officeHour}
-                onChange={e => setNewCourse({ ...newCourse, officeHour: e.target.value })}
-              />
-              <input
-                type="text"
-                placeholder="Topic (optional)"
-                className="w-full border px-3 py-2 rounded"
-                value={newCourse.topic}
-                onChange={e => setNewCourse({ ...newCourse, topic: e.target.value })}
-              />
+              <div>
+                <label className="text-sm text-gray-600 block mb-1">Course Name</label>
+                <input
+                  type="text"
+                  className="w-full border px-3 py-2 rounded"
+                  value={newCourse.name}
+                  onChange={e => setNewCourse({ ...newCourse, name: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="text-sm text-gray-600 block mb-1">Lecture Time</label>
+                <input
+                  type="time"
+                  className="w-full border px-3 py-2 rounded"
+                  value={newCourse.lectureTime}
+                  onChange={e => setNewCourse({ ...newCourse, lectureTime: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="text-sm text-gray-600 block mb-1">Office Hour (optional)</label>
+                <input
+                  type="time"
+                  className="w-full border px-3 py-2 rounded"
+                  value={newCourse.officeHour}
+                  onChange={e => setNewCourse({ ...newCourse, officeHour: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="text-sm text-gray-600 block mb-1">Topic (optional)</label>
+                <input
+                  type="text"
+                  className="w-full border px-3 py-2 rounded"
+                  value={newCourse.topic}
+                  onChange={e => setNewCourse({ ...newCourse, topic: e.target.value })}
+                />
+              </div>
+
               <button
                 onClick={handleManualCourseAdd}
                 className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
@@ -119,6 +139,17 @@ const Filter = ({ onFinish }) => {
               </button>
             </div>
           )}
+        </div>
+      )}
+
+      {uploaded && (
+        <div className="text-center mt-6">
+          <button
+            onClick={handleContinue}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold"
+          >
+            Continue to Calendar
+          </button>
         </div>
       )}
     </div>
