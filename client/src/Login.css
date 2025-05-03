@@ -1,0 +1,48 @@
+@tailwind utilities;
+
+@layer utilities {
+  /* Login Section */
+  .login-section {
+    @apply bg-white rounded-3xl shadow-lg p-8 max-w-md mx-auto my-12;
+  }
+
+  .login-header {
+    @apply flex items-center justify-center mb-8;
+  }
+
+  .login-logo {
+    @apply text-3xl mr-2;
+  }
+
+  .login-title {
+    @apply text-3xl font-bold text-s1;
+  }
+
+  .login-input-group {
+    @apply space-y-4 mb-6;
+  }
+
+  .login-input-wrapper {
+    @apply relative;
+  }
+
+  .login-icon {
+    @apply absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500;
+  }
+
+  .login-input {
+    @apply w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-p2 text-s1 placeholder-gray-400;
+  }
+
+  .login-button {
+    @apply w-full bg-p2 text-white font-semibold py-3 rounded-lg hover:bg-s4 transition-colors duration-300;
+  }
+
+  .login-signup-text {
+    @apply text-center text-s1 mt-4;
+  }
+
+  .login-signup-link {
+    @apply text-p2 hover:underline cursor-pointer;
+  }
+}

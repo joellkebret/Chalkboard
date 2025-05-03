@@ -4,7 +4,21 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Define custom colors (placeholders - replace with your desired values) */
 @layer base {
+  :root {
+    --s1: #1b275a; /* Background color for elements like day grid */
+    --s2: #2a3a7a; /* Hover background color */
+    --s3: #3c52d9; /* Border color for pricing odd plans */
+    --s4: #334679; /* Border color */
+    --s5: #0e1434; /* Background for some elements */
+    --p1: #ffffff; /* Text/icon fill color */
+    --p2: #2ef2ff; /* Dot color */
+    --p3: #3c52d9; /* Accent color for buttons, events */
+    --p4: #61dafb; /* Hover text color */
+    --p5: #d1d5db; /* Default text color */
+  }
+
   html {
     /* @apply bg-s1; */
   }
@@ -154,6 +168,72 @@
   }
 
   /* END of Common */
+  /* START of Calendar */
+  .calendar-wrapper {
+    @apply g7 rounded-3xl p-6 border border-s4;
+  }
+
+  .calendar-controls {
+    @apply flex flex-wrap justify-center gap-4;
+  }
+
+  .fc {
+    @apply font-poppins;
+  }
+
+  .fc-toolbar {
+    @apply mb-4 flex flex-wrap gap-2;
+  }
+
+  .fc-toolbar-title {
+    @apply h5 text-p5;
+  }
+
+  .fc-button {
+    @apply base-bold uppercase text-p5 bg-s1 border-s4 hover:bg-s4 hover:text-p4 transition-colors duration-300 rounded-lg px-4 py-2 !important;
+  }
+
+  .fc-button:focus {
+    @apply outline-none ring-2 ring-p3;
+  }
+
+  .fc-button-active {
+    @apply bg-p3 text-s1 !important;
+  }
+
+  .fc-daygrid-day {
+    @apply bg-s1 border-s4;
+  }
+
+  .fc-daygrid-day:hover {
+    @apply bg-s2;
+  }
+
+  .fc-daygrid-day-top {
+    @apply body-3 text-p5;
+  }
+
+  .fc-daygrid-event {
+    @apply base rounded-lg bg-p3 text-s1 border-none;
+  }
+
+  .fc-timegrid-slot {
+    @apply body-3 text-p5;
+  }
+
+  .fc-timegrid-event {
+    @apply base rounded-lg bg-p3 text-s1 border-none;
+  }
+
+  .fc-timegrid-col {
+    @apply bg-s1 border-s4;
+  }
+
+  .fc-timegrid-col:hover {
+    @apply bg-s2;
+  }
+
+  /* END of Calendar */
   /* START of Header */
   .nav-active {
     @apply text-p3;
@@ -294,7 +374,7 @@
   }
 
   .download_preview-after {
-    @apply after:g8 after:absolute after:-bottom-0.5 after:left-6 after:h-0.5 after:w-[42.2%] after:opacity-40 after:content-[''];
+    @apply after:g8 after:absolute after:-bottom-0.5 after:left-6 after:h-0.5 after:w-[42.2%] before:opacity-40 after:content-[''];
   }
 
   .download_preview-dot {
