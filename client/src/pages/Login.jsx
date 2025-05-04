@@ -13,29 +13,31 @@ const Login = () => {
     try {
       console.log('Starting OAuth login with:', provider);
       console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
-
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
           redirectTo: `${window.location.origin}/onboarding`,
           queryParams: {
             access_type: 'offline',
-            prompt: 'consent',
-          },
+            prompt: 'consent'
+          }
         },
       });
-
+      
       if (error) {
         console.error('OAuth Error:', error);
         throw error;
       }
-
+      
       console.log('OAuth Response:', data);
-
+      
+      // Listen for auth state changes
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
         console.log('Auth state changed:', event, session);
         if (event === 'SIGNED_IN' && session) {
           console.log('User signed in:', session.user);
+          // Check if user exists in public.users
           checkUserExists(session.user.id);
         }
       });
@@ -62,11 +64,12 @@ const Login = () => {
         console.error('Error checking user:', error);
         throw error;
       }
-
+      
       console.log('User check result:', data);
-
+      
       if (!data) {
         console.log('User not found in public.users, waiting for trigger...');
+        // Wait a moment for the trigger to complete
         setTimeout(() => {
           navigate('/calendar');
         }, 1000);
@@ -85,6 +88,7 @@ const Login = () => {
       if (error) return;
 
       if (user) {
+        // Check if user exists in our database
         const { error: userError } = await supabase
           .from('users')
           .upsert({
@@ -92,7 +96,7 @@ const Login = () => {
             email: user.email,
             name: user.user_metadata?.full_name || user.email,
             auth_provider: user.app_metadata?.provider || 'email',
-            created_at: new Date().toISOString(),
+            created_at: new Date().toISOString()
           });
 
         if (userError) {
@@ -100,22 +104,17 @@ const Login = () => {
           return;
         }
 
+        // Check if user has completed onboarding
         const { data: userData } = await supabase
           .from('users')
           .select('first_login_complete')
           .eq('id', user.id)
           .single();
 
-        const preferences = userData?.first_login_complete;
-
-        const redirect = localStorage.getItem('redirectAfterLogin');
-        if (redirect) {
-          localStorage.removeItem('redirectAfterLogin');
-          navigate('/filter');
-        } else if (!preferences) {
-          navigate('/onboarding');
-        } else {
+        if (userData?.first_login_complete) {
           navigate('/calendar');
+        } else {
+          navigate('/onboarding');
         }
       }
     };

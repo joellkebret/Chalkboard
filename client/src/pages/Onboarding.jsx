@@ -21,19 +21,47 @@ const Onboarding = () => {
         return;
       }
 
-      // Check if user has completed onboarding
-      const { data: userData } = await supabase
-        .from('users')
-        .select('first_login_complete')
-        .eq('id', user.id)
-        .single();
+      try {
+        // First check if user exists in users table
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('first_login_complete')
+          .eq('id', user.id)
+          .single();
 
-      if (userData?.first_login_complete) {
-        navigate('/calendar');
-        return;
+        if (userError) {
+          // If user doesn't exist, create them
+          if (userError.code === 'PGRST116') {
+            const { error: createError } = await supabase
+              .from('users')
+              .insert([{
+                id: user.id,
+                email: user.email,
+                first_login_complete: false,
+                created_at: new Date().toISOString()
+              }]);
+
+            if (createError) {
+              console.error('Error creating user:', createError);
+              return;
+            }
+          } else {
+            console.error('Error checking user status:', userError);
+            return;
+          }
+        }
+
+        // If user exists and has completed onboarding, redirect to calendar
+        if (userData?.first_login_complete) {
+          navigate('/calendar');
+          return;
+        }
+
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error in checkPreferences:', error);
+        setIsLoading(false);
       }
-
-      setIsLoading(false);
     };
 
     checkPreferences();
@@ -148,44 +176,41 @@ const Onboarding = () => {
       return;
     }
 
-    // Prepare data for the preferences table
-    const preferences = {
-      user_id: user.id,
-      best_time: answers.best_time || null,
-      preferred_session_length: answers.preferred_session_length ? parseInt(answers.preferred_session_length) : null,
-      preferred_break_length: customBreak ? parseInt(customBreak) : (answers.preferred_break_length ? parseInt(answers.preferred_break_length) : null),
-      max_classes_per_day: answers.max_classes_per_day ? parseInt(answers.max_classes_per_day) : null,
-      fatigue_threshold: answers.fatigue_threshold ? parseInt(answers.fatigue_threshold) : null,
-      difficulty_order_preference: answers.difficulty_order_preference || null,
-      start_time: answers.start_time || null,
-      end_time: answers.end_time || null
-    };
+    try {
+      // Prepare data for the preferences table
+      const preferences = {
+        user_id: user.id,
+        best_time: answers.best_time || null,
+        preferred_session_length: answers.preferred_session_length ? parseInt(answers.preferred_session_length) : null,
+        preferred_break_length: customBreak ? parseInt(customBreak) : (answers.preferred_break_length ? parseInt(answers.preferred_break_length) : null),
+        max_classes_per_day: answers.max_classes_per_day ? parseInt(answers.max_classes_per_day) : null,
+        fatigue_threshold: answers.fatigue_threshold ? parseInt(answers.fatigue_threshold) : null,
+        difficulty_order_preference: answers.difficulty_order_preference || null,
+        start_time: answers.start_time || null,
+        end_time: answers.end_time || null
+      };
 
-    // Upsert into preferences
-    const { error: prefError } = await supabase
-      .from('preferences')
-      .upsert(preferences, { onConflict: ['user_id'] });
+      // Upsert into preferences
+      const { error: prefError } = await supabase
+        .from('preferences')
+        .upsert(preferences, { onConflict: ['user_id'] });
 
-    if (prefError) {
-      console.error("Error saving preferences:", prefError);
-      alert("Failed to save preferences.");
-      return;
-    }
+      if (prefError) throw prefError;
 
-    // Mark onboarding as complete
-    const { error: userError } = await supabase
-      .from('users')
-      .update({ first_login_complete: true })
-      .eq('id', user.id);
+      // Mark onboarding as complete
+      const { error: userError } = await supabase
+        .from('users')
+        .update({ first_login_complete: true })
+        .eq('id', user.id);
 
-    if (userError) {
-      console.error("Error updating user:", userError);
-      alert("Failed to update user profile.");
-      return;
-    }
+      if (userError) throw userError;
 
-    if (shouldNavigate) {
-      navigate('/filter');
+      if (shouldNavigate) {
+        navigate('/filter');
+      }
+    } catch (error) {
+      console.error('Error saving preferences:', error);
+      alert('Failed to save preferences. Please try again.');
     }
   };
 
@@ -322,4 +347,4 @@ const Onboarding = () => {
   );
 };
 
-export default Onboarding;
+export default Onboarding
