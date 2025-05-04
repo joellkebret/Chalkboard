@@ -21,29 +21,14 @@ const Onboarding = () => {
         return;
       }
 
-      // Check if user exists in our database
-      const { error: userError } = await supabase
+      // Check if user has completed onboarding
+      const { data: userData } = await supabase
         .from('users')
-        .upsert({
-          id: user.id,
-          email: user.email,
-          name: user.user_metadata?.full_name || user.email,
-          auth_provider: user.app_metadata?.provider || 'email',
-          created_at: new Date().toISOString()
-        });
-
-      if (userError) {
-        console.error('Error creating user:', userError);
-        return;
-      }
-
-      const { data: preferences, error } = await supabase
-        .from('preferences')
-        .select('id')
-        .eq('user_id', user.id)
+        .select('first_login_complete')
+        .eq('id', user.id)
         .single();
 
-      if (preferences) {
+      if (userData?.first_login_complete) {
         navigate('/calendar');
         return;
       }
@@ -200,7 +185,7 @@ const Onboarding = () => {
     }
 
     if (shouldNavigate) {
-      navigate('/calendar');
+      navigate('/filter');
     }
   };
 

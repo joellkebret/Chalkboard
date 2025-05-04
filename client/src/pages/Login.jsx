@@ -71,11 +71,11 @@ const Login = () => {
         console.log('User not found in public.users, waiting for trigger...');
         // Wait a moment for the trigger to complete
         setTimeout(() => {
-          navigate('/onboarding');
+          navigate('/calendar');
         }, 1000);
       } else {
         console.log('User found in public.users:', data);
-        navigate('/onboarding');
+        navigate('/calendar');
       }
     } catch (error) {
       console.error('Error in checkUserExists:', error);
@@ -88,37 +88,33 @@ const Login = () => {
       if (error) return;
 
       if (user) {
-        // Check if user has preferences
-        const { data: preferences, error: prefError } = await supabase
-          .from('preferences')
-          .select('id')
-          .eq('user_id', user.id)
+        // Check if user exists in our database
+        const { error: userError } = await supabase
+          .from('users')
+          .upsert({
+            id: user.id,
+            email: user.email,
+            name: user.user_metadata?.full_name || user.email,
+            auth_provider: user.app_metadata?.provider || 'email',
+            created_at: new Date().toISOString()
+          });
+
+        if (userError) {
+          console.error('Error creating user:', userError);
+          return;
+        }
+
+        // Check if user has completed onboarding
+        const { data: userData } = await supabase
+          .from('users')
+          .select('first_login_complete')
+          .eq('id', user.id)
           .single();
 
-        const redirect = localStorage.getItem('redirectAfterLogin');
-        if (redirect) {
-          localStorage.removeItem('redirectAfterLogin');
-          navigate('/filter');
-        } else if (!preferences) {
-          // Create user in our database if they don't exist
-          const { error: userError } = await supabase
-            .from('users')
-            .upsert({
-              id: user.id,
-              email: user.email,
-              name: user.user_metadata?.full_name || user.email,
-              auth_provider: user.app_metadata?.provider || 'email',
-              created_at: new Date().toISOString()
-            });
-
-          if (userError) {
-            console.error('Error creating user:', userError);
-            return;
-          }
-
-          navigate('/onboarding');
-        } else {
+        if (userData?.first_login_complete) {
           navigate('/calendar');
+        } else {
+          navigate('/onboarding');
         }
       }
     };

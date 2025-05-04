@@ -10,6 +10,7 @@ import Navbar from './sections/Navbar';
 import Filter from './sections/Filter';
 import Footer from './sections/Footer';
 import Onboarding from './pages/Onboarding';
+import Calendar from './pages/Calendar';
 
 const App = () => {
   const location = useLocation();
@@ -55,6 +56,7 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/filter" element={<Filter />} />
           <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/calendar" element={<Calendar />} />
         </Routes>
       </div>
     </div>
