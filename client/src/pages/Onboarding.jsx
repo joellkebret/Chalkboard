@@ -21,22 +21,6 @@ const Onboarding = () => {
         return;
       }
 
-      // Check if user exists in our database
-      const { error: userError } = await supabase
-        .from('users')
-        .upsert({
-          id: user.id,
-          email: user.email,
-          name: user.user_metadata?.full_name || user.email,
-          auth_provider: user.app_metadata?.provider || 'email',
-          created_at: new Date().toISOString()
-        });
-
-      if (userError) {
-        console.error('Error creating user:', userError);
-        return;
-      }
-
       const { data: preferences, error } = await supabase
         .from('preferences')
         .select('id')

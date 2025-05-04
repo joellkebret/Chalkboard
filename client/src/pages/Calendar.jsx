@@ -1,134 +1,142 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import FullCalendar from '@fullcalendar/react';
-import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
+import dayGridPlugin from '@fullcalendar/daygrid';
 import { supabase } from '../supabase/supabaseClient';
+import '../index.css';
 
 const Calendar = () => {
-  const calendarRef = useRef(null);
-  const [loading, setLoading] = useState(false);
+  const ref = useRef(null);
+  const [events, setEvents] = useState([]);
+  const [userId, setUserId] = useState(null);
+  const [modalData, setModalData] = useState(null);
 
-  // Sample events
-  const events = [
-    { title: 'Meeting', start: '2025-05-05T10:00:00', end: '2025-05-05T11:00:00' },
-    { title: 'Lunch Break', start: '2025-05-06T12:00:00', end: '2025-05-06T13:00:00' },
-    { title: 'Project Deadline', start: '2025-05-10' }, // All-day event
-  ];
-
-  // Trigger the scheduling engine for the logged-in user
-  async function runEngine() {
-    setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      alert('You must be logged in!');
-      setLoading(false);
-      return;
-    }
-    const userId = user.id;
-    try {
-      const res = await fetch(`/api/schedule/${userId}`, { method: 'POST' });
-      const data = await res.json();
-      if (data.scheduled) {
-        alert('Schedule generated!');
-      } else {
-        alert(data.message || 'No schedule generated.');
+  useEffect(() => {
+    const fetchUserAndTasks = async () => {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) {
+        console.error('Failed to fetch user:', userError);
+        return;
       }
-    } catch (err) {
-      alert('Failed to generate schedule.');
-    }
-    setLoading(false);
-  }
 
-  // Handle date click
-  const handleDateClick = (arg) => {
-    alert(`Date clicked: ${arg.dateStr}`);
-  };
+      const user = userData.user;
+      setUserId(user.id);
 
-  // Handle event click
-  const handleEventClick = (arg) => {
-    alert(`Event: ${arg.event.title} on ${arg.event.start.toISOString()}`);
-  };
+      const { data: tasks, error: taskError } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('user_id', user.id);
 
-  // Handle view change
-  const handleViewChange = (view) => {
-    const calendarApi = calendarRef.current.getApi();
-    calendarApi.changeView(view);
-  };
+      if (taskError) {
+        console.error('Error fetching tasks:', taskError);
+        return;
+      }
+
+      const calendarEvents = tasks.map(task => {
+        const today = new Date();
+        const dayIndex = today.getDay(); // fallback day
+        const startDateTime = `${today.toISOString().split('T')[0]}T${task.start_time}`;
+        const endDateTime = `${today.toISOString().split('T')[0]}T${task.end_time}`;
+
+        return {
+          id: task.id,
+          title: `${task.course_name} - ${task.task_type}`,
+          start: startDateTime,
+          end: endDateTime,
+          extendedProps: {
+            type: task.task_type,
+            color: task.color,
+          },
+          classNames: [`bg-${task.color}-600`], // tailwind color utility
+        };
+      });
+
+      setEvents(calendarEvents);
+    };
+
+    fetchUserAndTasks();
+  }, []);
 
   return (
-    <section className="container overflow-hidden">
-      <h1 className="h2 text-center mb-8">Event Calendar</h1>
-      <div className="flex justify-center mb-6">
+    <section className="min-h-screen bg-[#292f36] text-white flex flex-col py-10 px-4">
+      <h1 className="text-4xl font-bold text-center mb-8">Calendar</h1>
+
+      <div className="flex justify-center gap-4 mb-6">
         <button
-          className="bg-blue-600 text-white px-4 py-2 rounded shadow disabled:opacity-60"
-          onClick={runEngine}
-          disabled={loading}
-        >
-          {loading ? 'Generating...' : 'Generate Study Schedule'}
-        </button>
-      </div>
-      <div className="calendar-controls mb-6 flex justify-center gap-4">
-        <button
-          className="fc-button"
-          onClick={() => handleViewChange('dayGridMonth')}
-        >
-          Monthly
-        </button>
-        <button
-          className="fc-button"
-          onClick={() => handleViewChange('timeGridWeek')}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+          onClick={() => ref.current?.getApi().changeView('timeGridWeek')}
         >
           Weekly
         </button>
         <button
-          className="fc-button"
-          onClick={() => handleViewChange('timeGridDay')}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+          onClick={() => ref.current?.getApi().changeView('timeGridDay')}
         >
           Daily
         </button>
       </div>
-      <div className="calendar-wrapper">
+
+      <div className="bg-white text-black rounded-xl shadow-xl max-w-6xl mx-auto w-full overflow-hidden">
         <FullCalendar
-          ref={calendarRef}
+          ref={ref}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-          initialView="dayGridMonth"
-          events={events}
-          dateClick={handleDateClick}
-          eventClick={handleEventClick}
+          initialView="timeGridWeek"
           headerToolbar={{
             left: 'prev,next today',
             center: 'title',
-            right: '', // Removed default view buttons
+            right: '',
           }}
+          slotMinTime="08:00:00"
+          slotMaxTime="22:00:00"
           height="auto"
-          aspectRatio={1.5}
-          weekends={true}
-          editable={true}
-          selectable={true}
-          views={{
-            dayGridMonth: {
-              titleFormat: { year: 'numeric', month: 'long' },
-            },
-            timeGridWeek: {
-              titleFormat: { year: 'numeric', month: 'short', day: 'numeric' },
-              slotLabelFormat: {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true,
-              },
-            },
-            timeGridDay: {
-              titleFormat: { year: 'numeric', month: 'short', day: 'numeric' },
-              slotLabelFormat: {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true,
-              },
-            },
+          events={events}
+          eventTimeFormat={{
+            hour: 'numeric',
+            minute: '2-digit',
+            meridiem: 'short',
           }}
+          eventContent={({ event }) => {
+            const { type } = event.extendedProps;
+            const icon =
+              type === 'Lecture' ? '📘' :
+              type === 'Office Hour' ? '📅' :
+              type === 'Final Exam' ? '📝' :
+              '📌';
+
+            return (
+              <div className="flex items-center px-2 py-1">
+                <span className="mr-2">{icon}</span>
+                <span className="text-sm truncate">{event.title}</span>
+              </div>
+            );
+          }}
+          eventClick={(info) => setModalData(info.event)}
+          eventClassNames={({ event }) =>
+            `${event.classNames[0]} text-white rounded px-2 py-1 shadow-md hover:shadow-lg`
+          }
         />
       </div>
+
+      {modalData && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50"
+          onClick={() => setModalData(null)}
+        >
+          <div className="bg-white text-black p-6 rounded-xl shadow-xl w-96" onClick={e => e.stopPropagation()}>
+            <h3 className="text-xl font-bold mb-2">{modalData.title}</h3>
+            <p className="text-sm">
+              Type: {modalData.extendedProps.type}
+            </p>
+            <button
+              onClick={() => setModalData(null)}
+              className="mt-4 bg-red-600 text-white px-4 py-2 rounded"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </section>
   );
 };
