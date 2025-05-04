@@ -23,7 +23,7 @@ const Hero = () => {
 
   const handleStartUploading = () => {
     if (user) {
-      navigate('/filter');
+      navigate('/calendar'); // ✅ Go to calendar if logged in
     } else {
       localStorage.setItem('redirectAfterLogin', 'true');
       navigate('/login');
@@ -57,7 +57,7 @@ const Hero = () => {
               onClick={handleStartUploading}
               className="px-8 py-4 bg-lime-400 text-black text-lg rounded-xl hover:bg-lime-500 transition font-semibold shadow-lg"
             >
-              Start Uploading
+              Start Planning
             </button>
           </div>
         </motion.div>

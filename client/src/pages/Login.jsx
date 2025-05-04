@@ -30,12 +30,37 @@ const Login = () => {
       if (error) return;
 
       if (user) {
+        // Check if user has preferences
+        const { data: preferences, error: prefError } = await supabase
+          .from('preferences')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+
         const redirect = localStorage.getItem('redirectAfterLogin');
         if (redirect) {
           localStorage.removeItem('redirectAfterLogin');
           navigate('/filter');
-        } else {
+        } else if (!preferences) {
+          // Create user in our database if they don't exist
+          const { error: userError } = await supabase
+            .from('users')
+            .upsert({
+              id: user.id,
+              email: user.email,
+              name: user.user_metadata?.full_name || user.email,
+              auth_provider: user.app_metadata?.provider || 'email',
+              created_at: new Date().toISOString()
+            });
+
+          if (userError) {
+            console.error('Error creating user:', userError);
+            return;
+          }
+
           navigate('/onboarding');
+        } else {
+          navigate('/calendar');
         }
       }
     };

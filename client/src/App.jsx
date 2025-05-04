@@ -5,7 +5,7 @@ import Hero from './sections/Hero';
 import About from './sections/About';
 import Features from './sections/Features';
 import Faq from './sections/Faq';
-import Login from './sections/Login';
+import Login from './pages/Login';
 import Navbar from './sections/Navbar';
 import Filter from './sections/Filter';
 import Footer from './sections/Footer';
