@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase/supabaseClient';
-import { FaArrowRight, FaArrowLeft } from 'react-icons/fa';
+import { FaArrowRight, FaArrowLeft, FaSun, FaMoon, FaClock, FaCoffee, FaBook, FaBrain, FaRandom, FaCalendarAlt } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import Filter from '../sections/Filter';
 
@@ -17,43 +17,91 @@ const Onboarding = () => {
     setIsLoading(false);
   }, []);
 
+  // Questions mapped to your preferences table
   const questions = [
     {
-      id: 'study_time_range',
-      question: 'What time can you start and end studying?',
-      type: 'time_range'
-    },
-    {
-      id: 'daily_study_hours',
-      question: 'How many hours can you study a day?',
-      type: 'dual_input',
-      labels: ['Preferred Hours', 'Max Hours']
-    },
-    {
-      id: 'best_study_time',
-      question: 'What time do you study best?',
-      options: ['Morning', 'Afternoon', 'Evening', 'Night']
+      id: 'best_time',
+      question: 'When do you study best?',
+      description: 'Choose the time of day when you feel most productive and focused',
+      options: [
+        { label: 'Morning (6am-12pm)', icon: <FaSun className="text-yellow-500" /> },
+        { label: 'Afternoon (12pm-5pm)', icon: <FaSun className="text-orange-500" /> },
+        { label: 'Evening (5pm-10pm)', icon: <FaMoon className="text-blue-500" /> },
+        { label: 'Night (10pm-6am)', icon: <FaMoon className="text-indigo-500" /> }
+      ]
     },
     {
       id: 'preferred_session_length',
-      question: 'Preferred session length?',
-      options: ['30', '45', '60', '90', '120'].map(time => `${time} minutes`)
+      question: 'How long do you prefer to study in one session?',
+      description: 'Select your ideal study session duration. Longer sessions allow for deeper focus but may lead to fatigue',
+      options: [
+        { label: '30 minutes', icon: <FaClock className="text-gray-500" /> },
+        { label: '45 minutes', icon: <FaClock className="text-gray-500" /> },
+        { label: '60 minutes', icon: <FaClock className="text-gray-500" /> },
+        { label: '90 minutes', icon: <FaClock className="text-gray-500" /> },
+        { label: '120 minutes', icon: <FaClock className="text-gray-500" /> }
+      ]
     },
     {
       id: 'preferred_break_length',
-      question: 'How long of a break do you like after a session?',
-      options: ['5', '10', '15', '20', '30'].map(time => `${time} minutes`).concat('Custom')
+      question: 'How long do you need for breaks between sessions?',
+      description: 'Choose how long you need to rest and recharge between study sessions',
+      options: [
+        { label: '5 minutes', icon: <FaCoffee className="text-brown-500" /> },
+        { label: '10 minutes', icon: <FaCoffee className="text-brown-500" /> },
+        { label: '15 minutes', icon: <FaCoffee className="text-brown-500" /> },
+        { label: '20 minutes', icon: <FaCoffee className="text-brown-500" /> },
+        { label: 'Custom', icon: <FaCoffee className="text-brown-500" /> }
+      ]
     },
     {
       id: 'max_classes_per_day',
-      question: 'How many classes can you study a day?',
-      options: ['1', '2', '3', '4', '5']
+      question: 'How many different subjects do you want to study per day?',
+      description: 'This helps us create a balanced study schedule without overwhelming you',
+      options: [
+        { label: '1 subject', icon: <FaBook className="text-green-500" /> },
+        { label: '2 subjects', icon: <FaBook className="text-green-500" /> },
+        { label: '3 subjects', icon: <FaBook className="text-green-500" /> },
+        { label: '4 subjects', icon: <FaBook className="text-green-500" /> }
+      ]
+    },
+    {
+      id: 'fatigue_threshold',
+      question: 'How long can you maintain focus before needing a break?',
+      description: 'This helps us determine when to schedule breaks to maintain your productivity',
+      options: [
+        { label: '30 minutes', icon: <FaBrain className="text-blue-500" /> },
+        { label: '1 hour', icon: <FaBrain className="text-blue-500" /> },
+        { label: '2 hours', icon: <FaBrain className="text-blue-500" /> },
+        { label: '3+ hours', icon: <FaBrain className="text-blue-500" /> }
+      ]
+    },
+    {
+      id: 'difficulty_order_preference',
+      question: 'How do you want to organize your study tasks?',
+      description: 'Choose how you want to approach your study materials',
+      options: [
+        { label: 'Start with easier topics', icon: <FaArrowRight className="text-green-500" /> },
+        { label: 'Tackle harder topics first', icon: <FaArrowRight className="text-red-500" /> },
+        { label: 'Mix it up randomly', icon: <FaRandom className="text-purple-500" /> }
+      ]
+    },
+    {
+      id: 'study_time_range',
+      question: 'What are your available study hours?',
+      description: 'Set your preferred study schedule window',
+      type: 'time_range',
+      icon: <FaCalendarAlt className="text-gray-500" />
     }
   ];
 
   const cards = [{ id: 'welcome' }, ...questions, { id: 'filter' }];
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    // If this is the last question (before filter), save preferences
+    if (currentCard === cards.length - 2) { // -2 because last is filter, before that is last question
+      await savePreferences();
+    }
     if (currentCard < cards.length - 1) {
       setDirection(1);
       setCurrentCard(currentCard + 1);
@@ -73,17 +121,46 @@ const Onboarding = () => {
 
   const savePreferences = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    await supabase.from('preferences').upsert({
+    if (!user) {
+      alert("Not logged in!");
+      return;
+    }
+
+    // Prepare data for the preferences table
+    const preferences = {
       user_id: user.id,
-      start_time: answers.start_time,
-      end_time: answers.end_time,
-      preferred_hours: parseFloat(answers.preferred_hours),
-      max_hours: parseFloat(answers.max_hours),
-      best_study_time: answers.best_study_time,
-      preferred_session_length: parseInt(answers.preferred_session_length),
-      preferred_break_length: parseInt(customBreak || answers.preferred_break_length),
-      max_classes_per_day: parseInt(answers.max_classes_per_day)
-    });
+      best_time: answers.best_time || null,
+      preferred_session_length: answers.preferred_session_length ? parseInt(answers.preferred_session_length) : null,
+      preferred_break_length: customBreak ? parseInt(customBreak) : (answers.preferred_break_length ? parseInt(answers.preferred_break_length) : null),
+      max_classes_per_day: answers.max_classes_per_day ? parseInt(answers.max_classes_per_day) : null,
+      fatigue_threshold: answers.fatigue_threshold ? parseInt(answers.fatigue_threshold) : null,
+      difficulty_order_preference: answers.difficulty_order_preference || null,
+      start_time: answers.start_time || null,
+      end_time: answers.end_time || null
+    };
+
+    // Upsert into preferences
+    const { error: prefError } = await supabase
+      .from('preferences')
+      .upsert(preferences, { onConflict: ['user_id'] });
+
+    if (prefError) {
+      console.error("Error saving preferences:", prefError);
+      alert("Failed to save preferences.");
+      return;
+    }
+
+    // Mark onboarding as complete
+    const { error: userError } = await supabase
+      .from('users')
+      .update({ first_login_complete: true })
+      .eq('id', user.id);
+
+    if (userError) {
+      console.error("Error updating user:", userError);
+      alert("Failed to update user profile.");
+      return;
+    }
 
     navigate('/calendar');
   };
@@ -118,7 +195,7 @@ const Onboarding = () => {
                   {c.id === 'welcome' && (
                     <>
                       <h2 className="text-3xl font-bold text-[#292f36]">Welcome to Chalkboard</h2>
-                      <p className="text-gray-600">Let’s personalize your study experience.</p>
+                      <p className="text-gray-600">Let's personalize your study experience.</p>
                       <button onClick={handleNext} className="bg-lime-400 hover:bg-lime-500 px-6 py-3 rounded-xl text-black font-semibold">Continue</button>
                     </>
                   )}
@@ -140,55 +217,54 @@ const Onboarding = () => {
                     return (
                       <>
                         <h2 className="text-2xl font-bold text-[#292f36] mt-2">{q.question}</h2>
+                        {q.description && (
+                          <p className="text-gray-600 text-sm mb-4">{q.description}</p>
+                        )}
 
+                        {/* Time range input */}
                         {q.type === 'time_range' && (
                           <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
-                            <div>
-                              <label className="block text-sm mb-1 text-[#292f36]">Start Time</label>
-                              <input type="time" className="border rounded-xl px-4 py-2" value={answers.start_time || ''} onChange={e => setAnswers(prev => ({ ...prev, start_time: e.target.value }))} />
+                            <div className="flex items-center gap-2">
+                              {q.icon}
+                              <div>
+                                <label className="block text-sm mb-1 text-[#292f36]">Start Time</label>
+                                <input type="time" className="border rounded-xl px-4 py-2" value={answers.start_time || ''} onChange={e => setAnswers(prev => ({ ...prev, start_time: e.target.value }))} />
+                              </div>
                             </div>
-                            <div>
-                              <label className="block text-sm mb-1 text-[#292f36]">End Time</label>
-                              <input type="time" className="border rounded-xl px-4 py-2" value={answers.end_time || ''} onChange={e => setAnswers(prev => ({ ...prev, end_time: e.target.value }))} />
+                            <div className="flex items-center gap-2">
+                              {q.icon}
+                              <div>
+                                <label className="block text-sm mb-1 text-[#292f36]">End Time</label>
+                                <input type="time" className="border rounded-xl px-4 py-2" value={answers.end_time || ''} onChange={e => setAnswers(prev => ({ ...prev, end_time: e.target.value }))} />
+                              </div>
                             </div>
                           </div>
                         )}
 
-                        {q.type === 'dual_input' && (
-                          <div className="flex flex-col sm:flex-row justify-center items-center gap-6">
-                            {q.labels.map((label, i) => {
-                              const field = i === 0 ? 'preferred_hours' : 'max_hours';
-                              return (
-                                <div key={label}>
-                                  <label className="block text-sm mb-1 text-[#292f36]">{label}</label>
-                                  <input type="number" className="border rounded-xl px-4 py-2 w-32" value={answers[field] || ''} onChange={e => setAnswers(prev => ({ ...prev, [field]: e.target.value }))} />
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-
+                        {/* Option buttons */}
                         {!q.type && q.options && (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {q.options.map(option => (
                               <button
-                                key={option}
+                                key={option.label}
                                 onClick={() => {
-                                  if (option === 'Custom') {
+                                  if (option.label === 'Custom') {
                                     handleAnswer(q.id, '');
                                   } else {
-                                    handleAnswer(q.id, option);
+                                    handleAnswer(q.id, option.label);
                                     if (q.id === 'preferred_break_length') setCustomBreak('');
                                   }
                                 }}
-                                className={`flex items-center justify-center gap-3 px-6 py-3 rounded-xl font-medium border ${answers[q.id] === option ? 'bg-lime-400 text-black' : 'border-gray-300 text-[#292f36] hover:bg-gray-100'}`}
+                                className={`flex items-center justify-center gap-3 px-6 py-3 rounded-xl font-medium border ${answers[q.id] === option.label ? 'bg-lime-400 text-black' : 'border-gray-300 text-[#292f36] hover:bg-gray-100'}`}
                               >
-                                {option}
+                                {option.icon}
+                                {option.label}
                               </button>
                             ))}
                           </div>
                         )}
 
+                        {/* Custom break input */}
                         {q.id === 'preferred_break_length' && answers[q.id] === '' && (
                           <div className="mt-4">
                             <input

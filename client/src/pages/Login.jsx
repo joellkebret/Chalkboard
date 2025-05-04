@@ -11,32 +11,95 @@ const Login = () => {
 
   const handleOAuthLogin = async (provider) => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      console.log('Starting OAuth login with:', provider);
+      console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: window.location.origin + '/onboarding'
+          redirectTo: `${window.location.origin}/onboarding`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent'
+          }
         },
       });
-      if (error) throw error;
+      
+      if (error) {
+        console.error('OAuth Error:', error);
+        throw error;
+      }
+      
+      console.log('OAuth Response:', data);
+      
+      // Listen for auth state changes
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        console.log('Auth state changed:', event, session);
+        if (event === 'SIGNED_IN' && session) {
+          console.log('User signed in:', session.user);
+          // Check if user exists in public.users
+          checkUserExists(session.user.id);
+        }
+      });
+
+      return () => {
+        subscription.unsubscribe();
+      };
     } catch (error) {
-      console.error(`${provider} login failed:`, error.message);
+      console.error(`${provider} login failed:`, error);
       alert(`${provider} login failed: ${error.message}`);
+    }
+  };
+
+  const checkUserExists = async (userId) => {
+    try {
+      console.log('Checking if user exists:', userId);
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error checking user:', error);
+        throw error;
+      }
+      
+      console.log('User check result:', data);
+      
+      if (!data) {
+        console.log('User not found in public.users, waiting for trigger...');
+        // Wait a moment for the trigger to complete
+        setTimeout(() => {
+          navigate('/onboarding');
+        }, 1000);
+      } else {
+        console.log('User found in public.users:', data);
+        navigate('/onboarding');
+      }
+    } catch (error) {
+      console.error('Error in checkUserExists:', error);
     }
   };
 
   useEffect(() => {
     const checkLogin = async () => {
-      const { data: { user }, error } = await supabase.auth.getUser();
-      if (error) return;
-
-      if (user) {
-        const redirect = localStorage.getItem('redirectAfterLogin');
-        if (redirect) {
-          localStorage.removeItem('redirectAfterLogin');
-          navigate('/filter');
-        } else {
-          navigate('/onboarding');
+      try {
+        console.log('Checking login status...');
+        const { data: { user }, error } = await supabase.auth.getUser();
+        console.log('User data:', { user, error });
+        
+        if (error) {
+          console.error('Error getting user:', error);
+          return;
         }
+
+        if (user) {
+          console.log('User is logged in:', user);
+          await checkUserExists(user.id);
+        }
+      } catch (error) {
+        console.error('Error in checkLogin:', error);
       }
     };
 
