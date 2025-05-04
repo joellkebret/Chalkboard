@@ -137,7 +137,7 @@ const Onboarding = () => {
   const handleNext = async () => {
     // If this is the last question (before filter), save preferences
     if (currentCard === cards.length - 2) { // -2 because last is filter, before that is last question
-      await savePreferences();
+      await savePreferences(false); // false means don't navigate yet
     }
     if (currentCard < cards.length - 1) {
       setDirection(1);
@@ -156,7 +156,7 @@ const Onboarding = () => {
     setAnswers(prev => ({ ...prev, [questionId]: answer }));
   };
 
-  const savePreferences = async () => {
+  const savePreferences = async (shouldNavigate = true) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       alert("Not logged in!");
@@ -199,7 +199,9 @@ const Onboarding = () => {
       return;
     }
 
-    navigate('/calendar');
+    if (shouldNavigate) {
+      navigate('/calendar');
+    }
   };
 
   const variants = {
@@ -240,7 +242,7 @@ const Onboarding = () => {
                     <>
                       <h2 className="text-2xl font-bold text-[#292f36] mb-4">Upload and Organize Your Courses</h2>
                       <div className="bg-[#f9f9f9] rounded-xl p-4">
-                        <Filter onFinish={savePreferences} />
+                        <Filter onFinish={() => savePreferences(true)} />
                       </div>
                       <div className="flex justify-start pt-4">
                         <button onClick={handleBack} className="text-[#292f36] flex items-center gap-2">
