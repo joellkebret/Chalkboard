@@ -11,16 +11,71 @@ const Login = () => {
 
   const handleOAuthLogin = async (provider) => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      console.log('Starting OAuth login with:', provider);
+      console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: window.location.origin + '/onboarding'
+          redirectTo: `${window.location.origin}/onboarding`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
         },
       });
-      if (error) throw error;
+
+      if (error) {
+        console.error('OAuth Error:', error);
+        throw error;
+      }
+
+      console.log('OAuth Response:', data);
+
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        console.log('Auth state changed:', event, session);
+        if (event === 'SIGNED_IN' && session) {
+          console.log('User signed in:', session.user);
+          checkUserExists(session.user.id);
+        }
+      });
+
+      return () => {
+        subscription.unsubscribe();
+      };
     } catch (error) {
-      console.error(`${provider} login failed:`, error.message);
+      console.error(`${provider} login failed:`, error);
       alert(`${provider} login failed: ${error.message}`);
+    }
+  };
+
+  const checkUserExists = async (userId) => {
+    try {
+      console.log('Checking if user exists:', userId);
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error checking user:', error);
+        throw error;
+      }
+
+      console.log('User check result:', data);
+
+      if (!data) {
+        console.log('User not found in public.users, waiting for trigger...');
+        setTimeout(() => {
+          navigate('/calendar');
+        }, 1000);
+      } else {
+        console.log('User found in public.users:', data);
+        navigate('/calendar');
+      }
+    } catch (error) {
+      console.error('Error in checkUserExists:', error);
     }
   };
 
@@ -30,12 +85,28 @@ const Login = () => {
       if (error) return;
 
       if (user) {
-        // Check if user has preferences
-        const { data: preferences, error: prefError } = await supabase
-          .from('preferences')
-          .select('id')
-          .eq('user_id', user.id)
+        const { error: userError } = await supabase
+          .from('users')
+          .upsert({
+            id: user.id,
+            email: user.email,
+            name: user.user_metadata?.full_name || user.email,
+            auth_provider: user.app_metadata?.provider || 'email',
+            created_at: new Date().toISOString(),
+          });
+
+        if (userError) {
+          console.error('Error creating user:', userError);
+          return;
+        }
+
+        const { data: userData } = await supabase
+          .from('users')
+          .select('first_login_complete')
+          .eq('id', user.id)
           .single();
+
+        const preferences = userData?.first_login_complete;
 
         const redirect = localStorage.getItem('redirectAfterLogin');
         if (redirect) {
