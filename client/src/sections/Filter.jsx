@@ -119,7 +119,12 @@ const Filter = ({ onFinish }) => {
         topics: newCourse.topic,
         total_weight: weight,
         created_at: createdAt,
+        days: newCourse.lectureDays,
+        officehours_days: newCourse.officeHourDays,
+        start_date: newCourse.startDate,
+        end_date: newCourse.endDate,
       }]);
+      
 
       if (userCourseError) throw userCourseError;
 
@@ -344,6 +349,104 @@ const Filter = ({ onFinish }) => {
                 </div>
 
                 <div>
+                  <label className="text-sm block mb-1">Lecture Schedule</label>
+                  <div className="space-y-4">
+                    <div className="flex gap-4">
+                      <div className="flex-1">
+                        <label className="text-sm block mb-1">Start Date</label>
+                        <input
+                          type="date"
+                          className="w-full border px-3 py-2 rounded"
+                          value={newCourse.startDate}
+                          onChange={e => setNewCourse({ ...newCourse, startDate: e.target.value })}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <label className="text-sm block mb-1">End Date</label>
+                        <input
+                          type="date"
+                          className="w-full border px-3 py-2 rounded"
+                          value={newCourse.endDate}
+                          onChange={e => setNewCourse({ ...newCourse, endDate: e.target.value })}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-sm block mb-1">Lecture Days *</label>
+                      <div className="flex flex-wrap gap-2">
+                        {DAYS.map(day => (
+                          <button
+                            type="button"
+                            key={day}
+                            onClick={() => toggleLectureDay(day)}
+                            className={`px-3 py-1 rounded-full border ${
+                              newCourse.lectureDays.includes(day)
+                                ? 'bg-blue-500 text-white'
+                                : 'text-gray-600'
+                            }`}
+                          >
+                            {day}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-sm block mb-1">Lecture Times</label>
+                      {newCourse.sameTime ? (
+                        <div className="flex gap-4">
+                          <div className="flex-1">
+                            <label className="text-sm block mb-1">Start Time</label>
+                            <input
+                              type="time"
+                              className="w-full border px-3 py-2 rounded"
+                              value={newCourse.lectureStart}
+                              onChange={e => setNewCourse({ ...newCourse, lectureStart: e.target.value })}
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <label className="text-sm block mb-1">End Time</label>
+                            <input
+                              type="time"
+                              className="w-full border px-3 py-2 rounded"
+                              value={newCourse.lectureEnd}
+                              onChange={e => setNewCourse({ ...newCourse, lectureEnd: e.target.value })}
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        newCourse.lectureDays.map((day, i) => (
+                          <div key={day} className="flex gap-2 items-center mb-2">
+                            <span className="w-24">{day}</span>
+                            <input
+                              type="time"
+                              value={newCourse.lectureTimes[i]?.start || ''}
+                              onChange={(e) => {
+                                const times = [...newCourse.lectureTimes];
+                                times[i] = { ...(times[i] || {}), start: e.target.value };
+                                setNewCourse({ ...newCourse, lectureTimes: times });
+                              }}
+                              className="border px-2 py-1 rounded"
+                            />
+                            <input
+                              type="time"
+                              value={newCourse.lectureTimes[i]?.end || ''}
+                              onChange={(e) => {
+                                const times = [...newCourse.lectureTimes];
+                                times[i] = { ...(times[i] || {}), end: e.target.value };
+                                setNewCourse({ ...newCourse, lectureTimes: times });
+                              }}
+                              className="border px-2 py-1 rounded"
+                            />
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div>
                   <label className="text-sm block mb-1">Course Difficulty (1-5) *</label>
                   <div className="flex items-center gap-2">
                     <input
@@ -385,94 +488,6 @@ const Filter = ({ onFinish }) => {
                   </div>
                 </div>
               </div>
-
-              <div>
-                <label className="text-sm block mb-1">Lecture Days</label>
-                <div className="flex flex-wrap gap-2">
-                  {DAYS.map(day => (
-                    <button
-                      type="button"
-                      key={day}
-                      onClick={() => toggleLectureDay(day)}
-                      className={`px-3 py-1 rounded-full border ${newCourse.lectureDays.includes(day)
-                        ? 'bg-blue-500 text-white'
-                        : 'text-gray-600'
-                        }`}
-                    >
-                      {day}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <label className="block mt-2 text-sm font-medium">Do all lectures have the same time?</label>
-              <div className="flex gap-4 mb-2">
-                <label className="flex items-center gap-1">
-                  <input
-                    type="radio"
-                    checked={newCourse.sameTime}
-                    onChange={() => setNewCourse({ ...newCourse, sameTime: true })}
-                  />
-                  Yes
-                </label>
-                <label className="flex items-center gap-1">
-                  <input
-                    type="radio"
-                    checked={!newCourse.sameTime}
-                    onChange={() => setNewCourse({ ...newCourse, sameTime: false, lectureTimes: [] })}
-                  />
-                  No
-                </label>
-              </div>
-
-              {newCourse.sameTime ? (
-                <div className="flex gap-4">
-                  <div className="flex-1">
-                    <label className="text-sm block mb-1">Lecture Start</label>
-                    <input
-                      type="time"
-                      className="w-full border px-3 py-2 rounded"
-                      value={newCourse.lectureStart}
-                      onChange={e => setNewCourse({ ...newCourse, lectureStart: e.target.value })}
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <label className="text-sm block mb-1">Lecture End</label>
-                    <input
-                      type="time"
-                      className="w-full border px-3 py-2 rounded"
-                      value={newCourse.lectureEnd}
-                      onChange={e => setNewCourse({ ...newCourse, lectureEnd: e.target.value })}
-                    />
-                  </div>
-                </div>
-              ) : (
-                newCourse.lectureDays.map((day, i) => (
-                  <div key={day} className="flex gap-2 items-center">
-                    <span className="w-24">{day}</span>
-                    <input
-                      type="time"
-                      value={newCourse.lectureTimes[i]?.start || ''}
-                      onChange={(e) => {
-                        const times = [...newCourse.lectureTimes];
-                        times[i] = { ...(times[i] || {}), start: e.target.value };
-                        setNewCourse({ ...newCourse, lectureTimes: times });
-                      }}
-                      className="border px-2 py-1 rounded"
-                    />
-                    <input
-                      type="time"
-                      value={newCourse.lectureTimes[i]?.end || ''}
-                      onChange={(e) => {
-                        const times = [...newCourse.lectureTimes];
-                        times[i] = { ...(times[i] || {}), end: e.target.value };
-                        setNewCourse({ ...newCourse, lectureTimes: times });
-                      }}
-                      className="border px-2 py-1 rounded"
-                    />
-                  </div>
-                ))
-              )}
 
               <div>
                 <label className="text-sm block mb-1">Office Hour Days</label>

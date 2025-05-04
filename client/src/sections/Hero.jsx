@@ -23,7 +23,7 @@ const Hero = () => {
 
   const handleStartUploading = () => {
     if (user) {
-      navigate('/calendar'); // ✅ Go to calendar if logged in
+      navigate('/calendar');
     } else {
       localStorage.setItem('redirectAfterLogin', 'true');
       navigate('/login');
@@ -31,12 +31,7 @@ const Hero = () => {
   };
 
   return (
-    <section className="relative bg-[#292f36] pt-40 pb-24 px-6 overflow-visible">
-      {/* Background visuals */}
-      <div className="absolute -top-40 -right-40 w-[300px] h-[300px] bg-lime-500 opacity-10 rounded-full blur-3xl z-0"></div>
-      <div className="absolute -bottom-40 -left-40 w-[250px] h-[250px] bg-lime-300 opacity-10 rounded-full blur-2xl z-0"></div>
-      <div className="absolute top-[20%] left-[45%] w-[150px] h-[150px] bg-lime-400 opacity-10 rounded-full blur-2xl z-0"></div>
-
+    <section className="relative bg-[#292f36] pt-24 pb-24 px-6 overflow-visible">
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
         {/* Text Section */}
         <motion.div
@@ -45,17 +40,17 @@ const Hero = () => {
           transition={{ duration: 0.8 }}
           className="z-20"
         >
-          <h1 className="text-6xl xl:text-7xl font-extrabold text-white leading-[1.4] mb-8 font-fredericka text-center lg:text-left">
-            Organize your <br />
-            <span className="text-lime-400">study schedule</span>
+          <h1 className="text-6xl xl:text-8xl font-extrabold text-white leading-tight mb-8 font-inter text-center lg:text-left">
+            <span style={{ color: '#F0DFAD' }}>You do the learning,</span><br />
+            <span style={{ color: '#EF7678' }}>we'll do the rest.</span>
           </h1>
-          <p className="text-xl xl:text-2xl text-gray-300 mb-10 text-center lg:text-left max-w-xl">
+          <p className="text-2xl xl:text-3xl text-gray-300 mb-10 text-center lg:text-left max-w-2xl">
             Upload your course outlines and set your preferences to create personalized study plans.
           </p>
           <div className="text-center lg:text-left">
             <button
               onClick={handleStartUploading}
-              className="px-8 py-4 bg-lime-400 text-black text-lg rounded-xl hover:bg-lime-500 transition font-semibold shadow-lg"
+              className="px-8 py-4 bg-[#CCE2A3] text-black text-xl rounded-xl hover:brightness-105 transition font-semibold shadow-lg"
             >
               Start Planning
             </button>

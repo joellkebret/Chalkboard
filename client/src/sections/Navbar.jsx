@@ -29,7 +29,7 @@ export default function Navbar() {
     await supabase.auth.signOut();
     setUser(null);
     setDropdownOpen(false);
-    navigate('/', { state: { scrollTo: 'home' } }); // 👈 go to Hero
+    navigate('/', { state: { scrollTo: 'home' } });
   };
 
   const scrollToSection = (id) => {
@@ -40,8 +40,11 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 w-full bg-[#1e232a] shadow-md px-6 py-4">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
-        <div className="text-2xl font-bold text-white cursor-pointer" onClick={() => scrollToSection('home')}>
-          Chalkboard
+        <div
+          className="text-2xl font-bold text-white cursor-pointer"
+          onClick={() => scrollToSection('home')}
+        >
+          🧠 Chalkboard
         </div>
 
         <ul className="hidden md:flex space-x-6 text-white font-medium">
@@ -57,14 +60,16 @@ export default function Navbar() {
           </button>
 
           <div className="relative">
-            {!user ? (
+            {!user && (
               <button
                 onClick={handleSignIn}
-                className="bg-lime-400 text-black px-6 py-3 rounded hover:bg-lime-500 transition font-semibold"
+                className={`bg-lime-400 text-black px-6 py-3 rounded hover:bg-lime-500 transition font-semibold
+                ${mobileMenuOpen ? 'hidden md:inline-block' : ''}`}
               >
                 Sign In
               </button>
-            ) : (
+            )}
+            {user && (
               <div>
                 <button
                   onClick={() => setDropdownOpen(!dropdownOpen)}

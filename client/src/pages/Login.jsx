@@ -132,7 +132,7 @@ const Login = () => {
       >
         <div className="flex flex-col items-center space-y-2">
           <UserCircleIcon className="w-12 h-12 text-[#292f36]" />
-          <h1 className="text-3xl font-extrabold text-[#292f36] font-fredericka">Chalkboard</h1>
+          <h1 className="text-3xl font-extrabold text-[#292f36] font-inter">Chalkboard</h1>
         </div>
         <p className="text-gray-600 text-sm">Log in to your account</p>
 
