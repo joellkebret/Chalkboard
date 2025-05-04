@@ -72,7 +72,7 @@ const Hero = () => {
               playsInline
               className="w-full h-auto aspect-video object-cover"
             >
-              <source src="/videos/IMG_7047.mp4" type="video/mp4" />
+              <source src="/videos/test.mp4" type="video/mp4" />
               Your browser does not support the video tag.
             </video>
           </div>
