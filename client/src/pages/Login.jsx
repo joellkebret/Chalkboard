@@ -84,22 +84,42 @@ const Login = () => {
 
   useEffect(() => {
     const checkLogin = async () => {
-      try {
-        console.log('Checking login status...');
-        const { data: { user }, error } = await supabase.auth.getUser();
-        console.log('User data:', { user, error });
-        
-        if (error) {
-          console.error('Error getting user:', error);
-          return;
-        }
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error) return;
 
-        if (user) {
-          console.log('User is logged in:', user);
-          await checkUserExists(user.id);
+      if (user) {
+        // Check if user has preferences
+        const { data: preferences, error: prefError } = await supabase
+          .from('preferences')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+
+        const redirect = localStorage.getItem('redirectAfterLogin');
+        if (redirect) {
+          localStorage.removeItem('redirectAfterLogin');
+          navigate('/filter');
+        } else if (!preferences) {
+          // Create user in our database if they don't exist
+          const { error: userError } = await supabase
+            .from('users')
+            .upsert({
+              id: user.id,
+              email: user.email,
+              name: user.user_metadata?.full_name || user.email,
+              auth_provider: user.app_metadata?.provider || 'email',
+              created_at: new Date().toISOString()
+            });
+
+          if (userError) {
+            console.error('Error creating user:', userError);
+            return;
+          }
+
+          navigate('/onboarding');
+        } else {
+          navigate('/calendar');
         }
-      } catch (error) {
-        console.error('Error in checkLogin:', error);
       }
     };
 
