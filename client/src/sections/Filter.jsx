@@ -7,7 +7,8 @@ import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 
-
+// For generating UUIDs
+const crypto = window.crypto;
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 const STORAGE_KEY = 'pdfUploads';
@@ -20,6 +21,8 @@ const Filter = ({ onFinish }) => {
   const [user, setUser] = useState(null);
   const [courses, setCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState(null);
   const [newCourse, setNewCourse] = useState({
     name: '', topic: '', lectureDays: [], sameTime: true,
     lectureStart: '', lectureEnd: '', lectureTimes: [],
@@ -56,6 +59,7 @@ const Filter = ({ onFinish }) => {
       setCourses(data || []);
     } catch (err) {
       console.error('Error fetching courses:', err);
+      setError('Failed to fetch courses. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -66,15 +70,132 @@ const Filter = ({ onFinish }) => {
     sessionStorage.removeItem(STORAGE_KEY);
   };
 
-  const handleUpload = ({ files }) => {
-    Promise.all(files.map(file => new Promise((res, rej) => {
-      const reader = new FileReader();
-      reader.onload = () => res({ name: file.name, dataUrl: reader.result });
-      reader.onerror = rej;
-      reader.readAsDataURL(file);
-    })))
-      .then(newFiles => setUploadedFiles(prev => [...prev, ...newFiles]))
-      .catch(err => console.error('FileReader error:', err));
+  const handleUpload = async ({ files }) => {
+    try {
+      setError(null);
+      setIsProcessing(true);
+      
+      // Add files to state
+      setUploadedFiles(prev => [...prev, ...files]);
+      
+      // Process files
+      const { courses: parsedCourses } = await readPdfsAndParse(files);
+      
+      // Process each course and create in database
+      for (const course of parsedCourses) {
+        // Create course with UUID
+        const courseId = crypto.randomUUID();
+        const { error: courseError } = await supabase
+          .from('courses')
+          .insert({
+            id: courseId,
+            course_name: course.courseName,
+            title: course.courseName,
+            topics: course.topics.join(', '),
+            priority: 3,
+            difficulty: 3,
+            weight: 100
+          });
+
+        if (courseError) throw courseError;
+
+        // Link course to user with UUID
+        const userCourseId = crypto.randomUUID();
+        const { error: linkError } = await supabase
+          .from('user_courses')
+          .insert({
+            id: userCourseId,
+            user_id: user.id,
+            course_id: courseId,
+            course_name: course.courseName,
+            priority: 3,
+            difficulty: 3,
+            topics: course.topics.join(', '),
+            total_weight: 100,
+            color_override: '#4a90e2'
+          });
+
+        if (linkError) throw linkError;
+
+        // Create tasks for each topic as study sessions
+        for (const topic of course.topics) {
+          const taskId = crypto.randomUUID();
+          const { error: taskError } = await supabase
+            .from('tasks')
+            .insert({
+              id: taskId,
+              user_id: user.id,
+              course_id: courseId,
+              course_name: course.courseName,
+              task_type: 'study',
+              color: '#4a90e2'
+            });
+
+          if (taskError) throw taskError;
+        }
+
+        // Create tasks for lecture times
+        if (course.lectureTimes && course.lectureTimes.length > 0) {
+          for (const lectureTime of course.lectureTimes) {
+            const [day, time] = lectureTime.match(/([A-Z]+)(\d{4}-\d{4})/).slice(1);
+            const [start, end] = time.split('-').map(t => 
+              t.replace(/(\d{2})(\d{2})/, '$1:$2:00')
+            );
+
+            const taskId = crypto.randomUUID();
+            const { error: lectureError } = await supabase
+              .from('tasks')
+              .insert({
+                id: taskId,
+                user_id: user.id,
+                course_id: courseId,
+                course_name: course.courseName,
+                task_type: 'lecture',
+                start_time: start,
+                end_time: end,
+                color: '#2ecc71'
+              });
+
+            if (lectureError) throw lectureError;
+          }
+        }
+
+        // Create tasks for office hours
+        if (course.officeHours && course.officeHours.length > 0) {
+          for (const officeHour of course.officeHours) {
+            const [day, time] = officeHour.match(/([A-Z]+)(\d{4}-\d{4})/).slice(1);
+            const [start, end] = time.split('-').map(t => 
+              t.replace(/(\d{2})(\d{2})/, '$1:$2:00')
+            );
+
+            const taskId = crypto.randomUUID();
+            const { error: ohError } = await supabase
+              .from('tasks')
+              .insert({
+                id: taskId,
+                user_id: user.id,
+                course_id: courseId,
+                course_name: course.courseName,
+                task_type: 'office_hours',
+                start_time: start,
+                end_time: end,
+                color: '#e74c3c'
+              });
+
+            if (ohError) throw ohError;
+          }
+        }
+      }
+
+      // Refresh courses
+      await fetchCourses(user.id);
+      onFinish();
+    } catch (error) {
+      console.error('Error processing PDFs:', error);
+      setError('Failed to process PDFs. Please try again.');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleManualCourseAdd = async () => {
@@ -87,53 +208,49 @@ const Filter = ({ onFinish }) => {
     <div className="p-6 max-w-3xl mx-auto bg-white rounded-lg shadow">
       <h2 className="text-xl font-bold mb-4 text-[#292f36] text-center">Upload Course Outline</h2>
 
+      {error && (
+        <div className="mb-4 p-4 bg-red-100 text-red-700 rounded">
+          {error}
+        </div>
+      )}
+
       {!manualMode && (
         <>
-          <FileUpload
-            mode="advanced"
-            name="course_outline"
-            customUpload
-            uploadHandler={handleUpload}
-            accept="application/pdf"
-            multiple
-            maxFileSize={10000000}
-            chooseLabel="Choose PDFs"
-            uploadLabel="Add to Queue"
-            cancelLabel="Cancel"
-            className="w-full"
-            emptyTemplate={
-              <div className="flex items-center gap-2 justify-center text-gray-500 py-4">
-                <i className="pi pi-upload text-xl" />
-                <span>Choose one or more PDFs</span>
-              </div>
-            }
-          />
+          <div className="mb-6">
+            <FileUpload
+              name="pdfs"
+              accept=".pdf"
+              maxFileSize={10000000}
+              multiple
+              customUpload
+              uploadHandler={handleUpload}
+              emptyTemplate={
+                <div className="flex flex-col items-center justify-center p-4 border-2 border-dashed rounded-lg">
+                  <i className="pi pi-cloud-upload text-4xl text-blue-500 mb-2" />
+                  <p className="text-gray-600">Drag and drop PDFs here or click to browse</p>
+                </div>
+              }
+            />
+          </div>
+
           {uploadedFiles.length > 0 && (
-            <div className="mt-4">
-              <h4 className="font-semibold">Queued PDFs:</h4>
-              <ul className="list-disc list-inside mb-2">
-                {uploadedFiles.map((f, i) => <li key={i}>{f.name}</li>)}
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold mb-2">Uploaded Files:</h3>
+              <ul className="space-y-2">
+                {uploadedFiles.map((file, index) => (
+                  <li key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                    <span>{file.name}</span>
+                    <button
+                      onClick={() => {
+                        setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+                      }}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      Remove
+                    </button>
+                  </li>
+                ))}
               </ul>
-              <button onClick={clearUploads} className="mr-2 px-4 py-2 bg-gray-300 rounded">Clear Queue</button>
-              <button onClick={async () => {
-                // convert back to File blobs and call JSON generator
-                const blobs = uploadedFiles.map(({ name, dataUrl }) => {
-                  const [, base64] = dataUrl.split(',');
-                  const bin = atob(base64);
-                  const arr = new Uint8Array(bin.length);
-                  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
-                  return new File([arr], name, { type: 'application/pdf' });
-                });
-                try {
-                  const result = await readPdfsAndParse(blobs);
-                  onFinish(result);
-                } catch (e) {
-                  console.error(e);
-                  alert('Parsing failed – check console.');
-                }
-              }} className="px-4 py-2 bg-blue-500 text-white rounded">
-                Parse & Generate JSON
-              </button>
             </div>
           )}
 
@@ -157,246 +274,10 @@ const Filter = ({ onFinish }) => {
 
           <button
             onClick={() => setShowCourseForm(true)}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold mb-4"
+            className="w-full py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
-            ➕ Add Course
+            Add New Course
           </button>
-
-          {showCourseForm && (
-            <div className="bg-white p-4 rounded shadow text-left space-y-3">
-              <input
-                type="text"
-                placeholder="Course name"
-                className="w-full border px-3 py-2 rounded"
-                value={newCourse.name}
-                onChange={e => setNewCourse({ ...newCourse, name: e.target.value })}
-              />
-              <input
-                type="text"
-                placeholder="Topic"
-                className="w-full border px-3 py-2 rounded"
-                value={newCourse.topic}
-                onChange={e => setNewCourse({ ...newCourse, topic: e.target.value })}
-              />
-
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm block mb-1">Course Credits *</label>
-                  <input
-                    type="text"
-                    placeholder="Enter credits (e.g., 0.5, 1.0, 1.5)"
-                    className="w-full border px-3 py-2 rounded"
-                    value={newCourse.weight}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      // Only allow numbers and one decimal point
-                      if (/^\d*\.?\d*$/.test(value)) {
-                        setNewCourse({ ...newCourse, weight: value });
-                      }
-                    }}
-                    required
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Enter a number (e.g., 0.5, 1.0, 1.5)</p>
-                </div>
-
-                <div>
-                  <label className="text-sm block mb-1">Course Difficulty (1-5) *</label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="range"
-                      min="1"
-                      max="5"
-                      value={newCourse.difficulty || ''}
-                      onChange={e => setNewCourse({ ...newCourse, difficulty: parseInt(e.target.value) })}
-                      className="w-full"
-                      required
-                    />
-                    <span className="text-sm font-medium">{newCourse.difficulty || '?'}</span>
-                  </div>
-                  <div className="flex justify-between text-xs text-gray-500 mt-1">
-                    <span>Easy</span>
-                    <span>Medium</span>
-                    <span>Hard</span>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-sm block mb-1">Course Priority (1-5) *</label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="range"
-                      min="1"
-                      max="5"
-                      value={newCourse.priority || ''}
-                      onChange={e => setNewCourse({ ...newCourse, priority: parseInt(e.target.value) })}
-                      className="w-full"
-                      required
-                    />
-                    <span className="text-sm font-medium">{newCourse.priority || '?'}</span>
-                  </div>
-                  <div className="flex justify-between text-xs text-gray-500 mt-1">
-                    <span>Low</span>
-                    <span>Medium</span>
-                    <span>High</span>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm block mb-1">Lecture Days</label>
-                <div className="flex flex-wrap gap-2">
-                  {DAYS.map(day => (
-                    <button
-                      type="button"
-                      key={day}
-                      onClick={() => toggleLectureDay(day)}
-                      className={`px-3 py-1 rounded-full border ${newCourse.lectureDays.includes(day)
-                        ? 'bg-blue-500 text-white'
-                        : 'text-gray-600'
-                        }`}
-                    >
-                      {day}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <label className="block mt-2 text-sm font-medium">Do all lectures have the same time?</label>
-              <div className="flex gap-4 mb-2">
-                <label className="flex items-center gap-1">
-                  <input
-                    type="radio"
-                    checked={newCourse.sameTime}
-                    onChange={() => setNewCourse({ ...newCourse, sameTime: true })}
-                  />
-                  Yes
-                </label>
-                <label className="flex items-center gap-1">
-                  <input
-                    type="radio"
-                    checked={!newCourse.sameTime}
-                    onChange={() => setNewCourse({ ...newCourse, sameTime: false, lectureTimes: [] })}
-                  />
-                  No
-                </label>
-              </div>
-
-              {newCourse.sameTime ? (
-                <div className="flex gap-4">
-                  <div className="flex-1">
-                    <label className="text-sm block mb-1">Lecture Start</label>
-                    <input
-                      type="time"
-                      className="w-full border px-3 py-2 rounded"
-                      value={newCourse.lectureStart}
-                      onChange={e => setNewCourse({ ...newCourse, lectureStart: e.target.value })}
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <label className="text-sm block mb-1">Lecture End</label>
-                    <input
-                      type="time"
-                      className="w-full border px-3 py-2 rounded"
-                      value={newCourse.lectureEnd}
-                      onChange={e => setNewCourse({ ...newCourse, lectureEnd: e.target.value })}
-                    />
-                  </div>
-                </div>
-              ) : (
-                newCourse.lectureDays.map((day, i) => (
-                  <div key={day} className="flex gap-2 items-center">
-                    <span className="w-24">{day}</span>
-                    <input
-                      type="time"
-                      value={newCourse.lectureTimes[i]?.start || ''}
-                      onChange={(e) => {
-                        const times = [...newCourse.lectureTimes];
-                        times[i] = { ...(times[i] || {}), start: e.target.value };
-                        setNewCourse({ ...newCourse, lectureTimes: times });
-                      }}
-                      className="border px-2 py-1 rounded"
-                    />
-                    <input
-                      type="time"
-                      value={newCourse.lectureTimes[i]?.end || ''}
-                      onChange={(e) => {
-                        const times = [...newCourse.lectureTimes];
-                        times[i] = { ...(times[i] || {}), end: e.target.value };
-                        setNewCourse({ ...newCourse, lectureTimes: times });
-                      }}
-                      className="border px-2 py-1 rounded"
-                    />
-                  </div>
-                ))
-              )}
-
-              <div>
-                <label className="text-sm block mb-1">Office Hour Days</label>
-                <div className="flex flex-wrap gap-2">
-                  {DAYS.map(day => (
-                    <button
-                      key={day}
-                      onClick={() => toggleOfficeHourDay(day)}
-                      className={`px-3 py-1 rounded-full border ${newCourse.officeHourDays.includes(day)
-                        ? 'bg-green-500 text-white'
-                        : 'text-gray-600'
-                        }`}
-                    >
-                      {day}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm block mb-1">Office Hour Time</label>
-                <input
-                  type="time"
-                  className="w-full border px-3 py-2 rounded"
-                  value={newCourse.officeHour}
-                  onChange={e => setNewCourse({ ...newCourse, officeHour: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <label className="text-sm block mb-1">Final Exam Date</label>
-                <input
-                  type="date"
-                  className="w-full border px-3 py-2 rounded"
-                  value={newCourse.finalExamDate}
-                  onChange={e => setNewCourse({ ...newCourse, finalExamDate: e.target.value })}
-                />
-              </div>
-
-              <div className="flex gap-4">
-                <div className="flex-1">
-                  <label className="text-sm block mb-1">Start</label>
-                  <input
-                    type="time"
-                    className="w-full border px-3 py-2 rounded"
-                    value={newCourse.finalExamStart}
-                    onChange={e => setNewCourse({ ...newCourse, finalExamStart: e.target.value })}
-                  />
-                </div>
-                <div className="flex-1">
-                  <label className="text-sm block mb-1">End</label>
-                  <input
-                    type="time"
-                    className="w-full border px-3 py-2 rounded"
-                    value={newCourse.finalExamEnd}
-                    onChange={e => setNewCourse({ ...newCourse, finalExamEnd: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <button
-                onClick={handleManualCourseAdd}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
-              >
-                Save Course
-              </button>
-            </div>
-          )}
         </div>
       )}
     </div>

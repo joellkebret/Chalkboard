@@ -1,26 +1,29 @@
 import express from 'express';
+import cors from 'cors';
 import path from 'path';
 import scheduleRoutes from './routes/schedule.js';
 import uploadRoutes from './routes/upload.js';
+import pdfRoutes from './routes/pdfRoutes.js';
 
 const app = express();
 
-// 1. Parse JSON bodies
+// Configure CORS
+app.use(cors({
+  origin: 'http://localhost:5173', // Your Vite dev server
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Middleware
 app.use(express.json());
 
-// 2. Serve uploaded files statically
-//    Any GET to /uploads/<filename> will return server/uploads/<filename>
-app.use(
-  '/uploads',
-  express.static(path.join(process.cwd(), 'uploads'))
-);
+// Serve uploaded files statically
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
-// 3. Mount your upload endpoint at POST /upload
-//    'uploadRoutes' handles POST '/' inside so '/upload' is correct
-app.use('/upload', uploadRoutes);
-
-// 4. Mount your scheduling engine routes under /api
+// Mount all routes under /api
+app.use('/api', uploadRoutes);
 app.use('/api', scheduleRoutes);
+app.use('/api', pdfRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
